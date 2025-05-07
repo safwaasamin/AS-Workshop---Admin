@@ -128,6 +128,52 @@ export class MemStorage implements IStorage {
       endDate: new Date('2023-09-20'),
       location: 'Bangalore, India',
       status: 'active'
+    }).then(event => {
+      // Add a few sample attendees
+      this.createAttendee({
+        eventId: event.id,
+        name: 'Priya Sharma',
+        email: 'priya.sharma@example.com',
+        company: 'Tech Innovations',
+        position: 'Junior Developer',
+        phone: '9876543210',
+        status: 'registered',
+        username: 'priya.sharma@example.com',
+        password: 'abc123',
+        mentorId: null,
+        score: 0,
+        completionTime: null
+      });
+      
+      this.createAttendee({
+        eventId: event.id,
+        name: 'Rahul Patel',
+        email: 'rahul.patel@example.com',
+        company: 'Digital Solutions',
+        position: 'UI/UX Designer',
+        phone: '8765432109',
+        status: 'in_progress',
+        username: 'rahul.patel@example.com',
+        password: 'abc123',
+        mentorId: null,
+        score: 45,
+        completionTime: null
+      });
+      
+      this.createAttendee({
+        eventId: event.id,
+        name: 'Ananya Kumar',
+        email: 'ananya.k@example.com',
+        company: 'WebTech',
+        position: 'Software Engineer',
+        phone: '7654321098',
+        status: 'completed',
+        username: 'ananya.k@example.com',
+        password: 'abc123',
+        mentorId: null,
+        score: 92,
+        completionTime: '2h 15m'
+      });
     });
   }
 

@@ -8,6 +8,7 @@ import { ProgressChart } from "@/components/ProgressChart";
 import { ApplicantList } from "@/components/ApplicantList";
 import { ImportAttendees } from "@/components/ImportAttendees";
 import { useQuery } from "@tanstack/react-query";
+import { queryClient } from "@/lib/queryClient";
 import { Loading } from "@/components/ui/loading";
 
 export default function Dashboard() {
@@ -42,8 +43,23 @@ export default function Dashboard() {
         <div className="container-fluid py-4">
           <div className="d-flex justify-content-between align-items-center mb-4">
             <h2 className="fw-bold">Dashboard</h2>
-            <div>
-              <button className="btn btn-outline-secondary">
+            <div className="d-flex gap-2">
+              <button 
+                className="btn btn-primary" 
+                data-bs-toggle="modal" 
+                data-bs-target="#importAttendeesModal"
+              >
+                <i className="bi bi-file-earmark-plus me-2"></i>Import Applicants
+              </button>
+              <button 
+                className="btn btn-outline-secondary"
+                onClick={() => {
+                  // Invalidate queries to refresh data
+                  queryClient.invalidateQueries({ queryKey: [`/api/events/${eventId}/attendees`] });
+                  queryClient.invalidateQueries({ queryKey: [`/api/events/${eventId}/stats`] });
+                  queryClient.invalidateQueries({ queryKey: [`/api/events/${eventId}/top-performers`] });
+                }}
+              >
                 <i className="bi bi-arrow-repeat me-2"></i>Refresh Data
               </button>
             </div>

@@ -199,69 +199,114 @@ export function ImportAttendees({ eventId }: ImportAttendeesProps) {
                 {error}
               </div>
             )}
-            <form onSubmit={handleSubmit}>
-              <div className="mb-3">
-                <label htmlFor="attendeeFile" className="form-label">Select File</label>
-                <input 
-                  className="form-control" 
-                  type="file" 
-                  id="attendeeFile" 
-                  accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
-                  onChange={handleFileChange}
-                />
-                {file && (
-                  <div className="mt-2">
-                    <span className="text-muted">Selected file: {file.name}</span>
-                  </div>
-                )}
-              </div>
-              <div className="form-check mb-3">
-                <input 
-                  className="form-check-input" 
-                  type="checkbox" 
-                  id="generateCredentials"
-                  checked={generateCredentials}
-                  onChange={() => setGenerateCredentials(!generateCredentials)}
-                />
-                <label className="form-check-label" htmlFor="generateCredentials">
-                  Auto-generate login credentials
-                </label>
-                <div className="form-text small text-muted">
-                  Email address will be used as login ID, and random passwords will be auto-generated.
-                  You can download the credentials list after import.
+            {importedAttendees.length > 0 ? (
+              <div className="mb-4">
+                <div className="alert alert-success">
+                  <h5 className="alert-heading mb-2">Import Successful!</h5>
+                  <p className="mb-2">Successfully imported {importedAttendees.length} applicants.</p>
+                  {generateCredentials && (
+                    <p className="mb-0">Login credentials have been generated. Please download them for your records.</p>
+                  )}
+                </div>
+                
+                <div className="d-grid gap-2 mt-3">
+                  <button 
+                    className="btn btn-primary"
+                    onClick={handleDownloadCredentials}
+                  >
+                    <i className="bi bi-file-earmark-excel me-2"></i>
+                    Download Credentials (Excel)
+                  </button>
+                  <button 
+                    className="btn btn-secondary"
+                    onClick={() => {
+                      setImportedAttendees([]);
+                      setFile(null);
+                      
+                      // Close modal
+                      const modal = document.getElementById('importAttendeesModal');
+                      if (modal) {
+                        const bsModal = window.bootstrap?.Modal.getInstance(modal);
+                        if (bsModal) {
+                          bsModal.hide();
+                        } else {
+                          const closeButton = modal.querySelector('.btn-close');
+                          if (closeButton) {
+                            (closeButton as HTMLElement).click();
+                          }
+                        }
+                      }
+                    }}
+                  >
+                    Close
+                  </button>
                 </div>
               </div>
-              <div className="form-check mb-3">
-                <input 
-                  className="form-check-input" 
-                  type="checkbox" 
-                  id="sendInvitationEmails"
-                  checked={sendInvitations}
-                  onChange={() => setSendInvitations(!sendInvitations)}
-                />
-                <label className="form-check-label" htmlFor="sendInvitationEmails">
-                  Send invitation emails to attendees
-                </label>
-              </div>
-              
-              <div className="modal-footer">
-                <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">
-                  Cancel
-                </button>
-                <button 
-                  type="submit" 
-                  className="btn btn-primary"
-                  disabled={isUploading || !file}
-                >
-                  {isUploading ? (
-                    <>
-                      <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                      Importing...
-                    </>
-                  ) : 'Import'}
-                </button>
-              </div>
-            </form>
+            ) : (
+              <form onSubmit={handleSubmit}>
+                <div className="mb-3">
+                  <label htmlFor="attendeeFile" className="form-label">Select File</label>
+                  <input 
+                    className="form-control" 
+                    type="file" 
+                    id="attendeeFile" 
+                    accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
+                    onChange={handleFileChange}
+                  />
+                  {file && (
+                    <div className="mt-2">
+                      <span className="text-muted">Selected file: {file.name}</span>
+                    </div>
+                  )}
+                </div>
+                <div className="form-check mb-3">
+                  <input 
+                    className="form-check-input" 
+                    type="checkbox" 
+                    id="generateCredentials"
+                    checked={generateCredentials}
+                    onChange={() => setGenerateCredentials(!generateCredentials)}
+                  />
+                  <label className="form-check-label" htmlFor="generateCredentials">
+                    Auto-generate login credentials
+                  </label>
+                  <div className="form-text small text-muted">
+                    Email address will be used as login ID, and random passwords will be auto-generated.
+                    You can download the credentials list after import.
+                  </div>
+                </div>
+                <div className="form-check mb-3">
+                  <input 
+                    className="form-check-input" 
+                    type="checkbox" 
+                    id="sendInvitationEmails"
+                    checked={sendInvitations}
+                    onChange={() => setSendInvitations(!sendInvitations)}
+                  />
+                  <label className="form-check-label" htmlFor="sendInvitationEmails">
+                    Send invitation emails to attendees
+                  </label>
+                </div>
+                
+                <div className="modal-footer">
+                  <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">
+                    Cancel
+                  </button>
+                  <button 
+                    type="submit" 
+                    className="btn btn-primary"
+                    disabled={isUploading || !file}
+                  >
+                    {isUploading ? (
+                      <>
+                        <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                        Importing...
+                      </>
+                    ) : 'Import'}
+                  </button>
+                </div>
+              </form>
+            )}
           </div>
         </div>
       </div>
