@@ -198,9 +198,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         let password = '';
         
         if (generateCredentials) {
-          // Generate credentials
-          username = Email.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '');
-          password = randomBytes(4).toString('hex');
+          // Generate login credentials
+          // Username will be the email address itself for easier login
+          username = Email;
+          // Generate a secure but manageable 8-character password
+          password = randomBytes(4).toString('hex') + randomBytes(2).toString('hex');
         }
         
         attendees.push({

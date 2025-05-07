@@ -180,28 +180,28 @@ export default function AuthPage() {
       </div>
       
       {/* Hero Section */}
-      <div className="md:w-1/2 bg-gradient-to-r from-blue-600 to-indigo-700 p-8 flex flex-col justify-center text-white">
+      <div className="md:w-1/2 bg-gradient-to-r from-blue-800 to-indigo-900 p-8 flex flex-col justify-center text-white">
         <div className="max-w-lg mx-auto">
-          <h1 className="text-4xl font-bold mb-6">Event Coordinator Admin Panel</h1>
+          <h1 className="text-4xl font-bold mb-6">AspiraSys IT Workshop</h1>
           <p className="text-xl mb-8">
-            Manage your events, attendees, mentors, and tasks with our comprehensive event management platform.
+            Comprehensive management system for technical skill development workshops and training events.
           </p>
           <div className="grid grid-cols-2 gap-4">
             <div className="bg-white/10 p-4 rounded-lg">
-              <h3 className="font-medium text-lg mb-2">Attendee Management</h3>
-              <p>Track registrations and manage participant information</p>
+              <h3 className="font-medium text-lg mb-2">Applicant Management</h3>
+              <p>Process applications with auto-generated credentials</p>
             </div>
             <div className="bg-white/10 p-4 rounded-lg">
               <h3 className="font-medium text-lg mb-2">Mentor Assignment</h3>
-              <p>Connect mentors with attendees for optimal event experience</p>
+              <p>Pair technical mentors with workshop participants</p>
             </div>
             <div className="bg-white/10 p-4 rounded-lg">
-              <h3 className="font-medium text-lg mb-2">Task Tracking</h3>
-              <p>Monitor progress and completion of tasks and activities</p>
+              <h3 className="font-medium text-lg mb-2">Skill Tracking</h3>
+              <p>Monitor progress and completion of technical tasks</p>
             </div>
             <div className="bg-white/10 p-4 rounded-lg">
-              <h3 className="font-medium text-lg mb-2">Feedback Collection</h3>
-              <p>Gather and analyze participant feedback for improvement</p>
+              <h3 className="font-medium text-lg mb-2">Performance Analytics</h3>
+              <p>Generate detailed reports on participant performance</p>
             </div>
           </div>
         </div>

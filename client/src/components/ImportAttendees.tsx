@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import * as XLSX from 'xlsx';
+import { saveAs } from 'file-saver';
 
 interface ImportAttendeesProps {
   eventId: number;
@@ -12,6 +14,7 @@ export function ImportAttendees({ eventId }: ImportAttendeesProps) {
   const [sendInvitations, setSendInvitations] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState("");
+  const [importedAttendees, setImportedAttendees] = useState<any[]>([]);
   
   const queryClient = useQueryClient();
   
@@ -29,26 +32,35 @@ export function ImportAttendees({ eventId }: ImportAttendeesProps) {
       
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: [`/api/events/${eventId}/attendees`] });
       queryClient.invalidateQueries({ queryKey: [`/api/events/${eventId}/stats`] });
       
-      // Reset form and close modal
-      setFile(null);
-      setError("");
+      // Save imported attendees for credentials download
+      setImportedAttendees(data);
       
-      // Close modal using DOM API instead of Bootstrap's API
-      const modal = document.getElementById('importAttendeesModal');
-      if (modal) {
-        // Use bootstrap modal API
-        const bsModal = window.bootstrap?.Modal.getInstance(modal);
-        if (bsModal) {
-          bsModal.hide();
-        } else {
-          // Fallback to clicking the close button
-          const closeButton = modal.querySelector('.btn-close');
-          if (closeButton) {
-            (closeButton as HTMLElement).click();
+      // If credentials were generated, show a success message with download button
+      if (generateCredentials && data.length > 0) {
+        setError("");
+        // Don't close modal yet, show download option
+      } else {
+        // Reset form and close modal if no credentials to download
+        setFile(null);
+        setError("");
+        
+        // Close modal using DOM API
+        const modal = document.getElementById('importAttendeesModal');
+        if (modal) {
+          // Use bootstrap modal API
+          const bsModal = window.bootstrap?.Modal.getInstance(modal);
+          if (bsModal) {
+            bsModal.hide();
+          } else {
+            // Fallback to clicking the close button
+            const closeButton = modal.querySelector('.btn-close');
+            if (closeButton) {
+              (closeButton as HTMLElement).click();
+            }
           }
         }
       }
@@ -85,6 +97,7 @@ export function ImportAttendees({ eventId }: ImportAttendeesProps) {
     
     setIsUploading(true);
     setError("");
+    setImportedAttendees([]);
     
     const formData = new FormData();
     formData.append('file', file);
@@ -94,24 +107,92 @@ export function ImportAttendees({ eventId }: ImportAttendeesProps) {
     importMutation.mutate(formData);
   };
   
+  const handleDownloadCredentials = () => {
+    if (!importedAttendees.length) return;
+    
+    // Create a worksheet with login credentials
+    const ws = XLSX.utils.json_to_sheet(
+      importedAttendees.map(attendee => ({
+        Name: attendee.name,
+        Email: attendee.email,
+        Username: attendee.username,
+        Password: attendee.password
+      }))
+    );
+    
+    // Create a workbook with the worksheet
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Credentials");
+    
+    // Generate Excel file
+    const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+    const data = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    
+    // Save the file
+    saveAs(data, `AspiraSys_Workshop_Credentials_${new Date().toISOString().split('T')[0]}.xlsx`);
+    
+    // Close modal
+    const modal = document.getElementById('importAttendeesModal');
+    if (modal) {
+      const bsModal = window.bootstrap?.Modal.getInstance(modal);
+      if (bsModal) {
+        bsModal.hide();
+      } else {
+        const closeButton = modal.querySelector('.btn-close');
+        if (closeButton) {
+          (closeButton as HTMLElement).click();
+        }
+      }
+    }
+    
+    // Reset state
+    setFile(null);
+    setImportedAttendees([]);
+  };
+  
   return (
     <div className="modal fade" id="importAttendeesModal" tabIndex={-1} aria-hidden="true">
       <div className="modal-dialog">
         <div className="modal-content">
           <div className="modal-header">
-            <h5 className="modal-title">Import Attendees</h5>
+            <h5 className="modal-title">Import Workshop Applicants</h5>
             <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div className="modal-body">
             <div className="mb-4">
-              <p>Upload a CSV or Excel file with attendee data. The file should include the following headers:</p>
+              <p>Upload a CSV or Excel file with applicant data for AspiraSys IT Workshop. The file should include the following columns:</p>
               <ul className="small text-muted">
-                <li>Name (required)</li>
-                <li>Email (required)</li>
-                <li>Company (optional)</li>
-                <li>Position (optional)</li>
-                <li>Phone (optional)</li>
+                <li><strong>Name</strong> (required) - Full name of the applicant</li>
+                <li><strong>Email</strong> (required) - Will be used as login ID</li>
+                <li><strong>Company</strong> (optional) - Organization or institution</li>
+                <li><strong>Position</strong> (optional) - Current role or job title</li>
+                <li><strong>Phone</strong> (optional) - Contact number</li>
               </ul>
+              <div className="bg-light p-2 rounded border mt-2">
+                <p className="mb-1 small fw-bold">Sample Excel format:</p>
+                <div className="table-responsive">
+                  <table className="table table-sm table-bordered small mb-0">
+                    <thead className="table-light">
+                      <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Company</th>
+                        <th>Position</th>
+                        <th>Phone</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>John Doe</td>
+                        <td>john.doe@example.com</td>
+                        <td>Tech Company</td>
+                        <td>Developer</td>
+                        <td>1234567890</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </div>
             {error && (
               <div className="alert alert-danger" role="alert">
