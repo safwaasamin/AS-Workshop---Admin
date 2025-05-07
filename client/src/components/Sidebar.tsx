@@ -24,50 +24,50 @@ export function Sidebar({ className = "" }: SidebarProps) {
         <ul className="nav flex-column px-3">
           <li className="nav-item">
             <Link href="/">
-              <a className={`nav-link text-white ${isActive('/') ? 'active' : ''}`}>
+              <div className={`nav-link text-white ${isActive('/') ? 'active' : ''} cursor-pointer`}>
                 <i className="bi bi-speedometer2 me-2"></i>
                 Dashboard
-              </a>
+              </div>
             </Link>
           </li>
           <li className="nav-item">
             <Link href="/attendees">
-              <a className={`nav-link text-white ${isActive('/attendees') ? 'active' : ''}`}>
+              <div className={`nav-link text-white ${isActive('/attendees') ? 'active' : ''} cursor-pointer`}>
                 <i className="bi bi-people me-2"></i>
                 Attendee Management
-              </a>
+              </div>
             </Link>
           </li>
           <li className="nav-item">
             <Link href="/mentors">
-              <a className={`nav-link text-white ${isActive('/mentors') ? 'active' : ''}`}>
+              <div className={`nav-link text-white ${isActive('/mentors') ? 'active' : ''} cursor-pointer`}>
                 <i className="bi bi-person-check me-2"></i>
                 Mentor Assignment
-              </a>
+              </div>
             </Link>
           </li>
           <li className="nav-item">
             <Link href="/feedback">
-              <a className={`nav-link text-white ${isActive('/feedback') ? 'active' : ''}`}>
+              <div className={`nav-link text-white ${isActive('/feedback') ? 'active' : ''} cursor-pointer`}>
                 <i className="bi bi-chat-square-text me-2"></i>
                 Feedback Setup
-              </a>
+              </div>
             </Link>
           </li>
           <li className="nav-item">
             <Link href="/tasks">
-              <a className={`nav-link text-white ${isActive('/tasks') ? 'active' : ''}`}>
+              <div className={`nav-link text-white ${isActive('/tasks') ? 'active' : ''} cursor-pointer`}>
                 <i className="bi bi-list-check me-2"></i>
                 Task Monitoring
-              </a>
+              </div>
             </Link>
           </li>
           <li className="nav-item">
             <Link href="/reports">
-              <a className={`nav-link text-white ${isActive('/reports') ? 'active' : ''}`}>
+              <div className={`nav-link text-white ${isActive('/reports') ? 'active' : ''} cursor-pointer`}>
                 <i className="bi bi-file-earmark-bar-graph me-2"></i>
                 Reports
-              </a>
+              </div>
             </Link>
           </li>
         </ul>

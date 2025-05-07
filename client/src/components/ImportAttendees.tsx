@@ -19,10 +19,7 @@ export function ImportAttendees({ eventId }: ImportAttendeesProps) {
     mutationFn: async (formData: FormData) => {
       const response = await fetch(`/api/events/${eventId}/import-attendees`, {
         method: "POST",
-        body: formData,
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
-        }
+        body: formData
       });
       
       if (!response.ok) {
@@ -40,11 +37,20 @@ export function ImportAttendees({ eventId }: ImportAttendeesProps) {
       setFile(null);
       setError("");
       
-      // Close modal using Bootstrap's API
+      // Close modal using DOM API instead of Bootstrap's API
       const modal = document.getElementById('importAttendeesModal');
       if (modal) {
-        const bsModal = window.bootstrap.Modal.getInstance(modal);
-        bsModal?.hide();
+        // Use bootstrap modal API
+        const bsModal = window.bootstrap?.Modal.getInstance(modal);
+        if (bsModal) {
+          bsModal.hide();
+        } else {
+          // Fallback to clicking the close button
+          const closeButton = modal.querySelector('.btn-close');
+          if (closeButton) {
+            (closeButton as HTMLElement).click();
+          }
+        }
       }
     },
     onError: (error: Error) => {
@@ -139,6 +145,10 @@ export function ImportAttendees({ eventId }: ImportAttendeesProps) {
                 <label className="form-check-label" htmlFor="generateCredentials">
                   Auto-generate login credentials
                 </label>
+                <div className="form-text small text-muted">
+                  Email address will be used as login ID, and random passwords will be auto-generated.
+                  You can download the credentials list after import.
+                </div>
               </div>
               <div className="form-check mb-3">
                 <input 
