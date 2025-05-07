@@ -50,9 +50,9 @@ export default function AuthPage() {
       <div className="md:w-1/2 p-8 flex items-center justify-center">
         <Card className="w-full max-w-md">
           <CardHeader>
-            <CardTitle className="text-2xl font-bold">Welcome to Event Coordinator</CardTitle>
+            <CardTitle className="text-2xl font-bold">Welcome to AspiraSys IT Workshop</CardTitle>
             <CardDescription>
-              Sign in to your account or create a new one
+              Sign in to access the event management dashboard
             </CardDescription>
           </CardHeader>
           <CardContent>

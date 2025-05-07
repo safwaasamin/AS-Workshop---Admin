@@ -122,11 +122,11 @@ export class MemStorage implements IStorage {
     
     // Create a sample event
     this.createEvent({
-      name: 'Tech Conference 2023',
-      description: 'Annual technology conference',
+      name: 'AspiraSys IT Workshop 2023',
+      description: 'Technical skill development workshop',
       startDate: new Date('2023-09-15'),
       endDate: new Date('2023-09-20'),
-      location: 'San Francisco, CA',
+      location: 'Bangalore, India',
       status: 'active'
     });
   }
