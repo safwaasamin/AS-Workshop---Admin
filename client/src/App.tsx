@@ -43,12 +43,13 @@ function Router() {
   return (
     <Switch>
       <Route path="/auth" component={AuthPage} />
-      <Route path="/" component={() => <ProtectedRoute component={Dashboard} />} />
-      <Route path="/attendees" component={() => <ProtectedRoute component={Attendees} />} />
-      <Route path="/mentors" component={() => <ProtectedRoute component={Mentors} />} />
-      <Route path="/feedback" component={() => <ProtectedRoute component={Feedback} />} />
-      <Route path="/tasks" component={() => <ProtectedRoute component={Tasks} />} />
-      <Route path="/reports" component={() => <ProtectedRoute component={Reports} />} />
+      {/* Temporarily disable authentication for development */}
+      <Route path="/" component={Dashboard} />
+      <Route path="/attendees" component={Attendees} />
+      <Route path="/mentors" component={Mentors} />
+      <Route path="/feedback" component={Feedback} />
+      <Route path="/tasks" component={Tasks} />
+      <Route path="/reports" component={Reports} />
       <Route component={NotFound} />
     </Switch>
   );
