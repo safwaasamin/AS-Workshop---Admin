@@ -44,7 +44,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Authentication middleware for protected routes
   const isAuthenticated = (req: Request, res: Response, next: NextFunction) => {
-    if (req.isAuthenticated()) {
+    if (req.isAuthenticated && req.isAuthenticated()) {
       return next();
     }
     res.status(401).json({ message: "Unauthorized" });

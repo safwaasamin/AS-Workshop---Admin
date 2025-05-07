@@ -142,12 +142,8 @@ export function setupAuth(app: Express) {
     res.status(401).json({ message: "Unauthorized" });
   };
   
-  // Export authentication middleware
-  app.use((req, res, next) => {
-    // Make isAuthenticated available on the app object
-    (req as any).isAuthenticated = isAuthenticated;
-    next();
-  });
+  // Export the authentication middleware function so routes can use it
+  app.locals.isAuthenticated = isAuthenticated;
 
   // API routes for authentication
   // Register route
@@ -191,7 +187,7 @@ export function setupAuth(app: Express) {
 
   // Login route
   app.post("/api/login", (req: Request, res: Response, next: NextFunction) => {
-    passport.authenticate("local", (err, user, info) => {
+    passport.authenticate("local", (err: Error | null, user: Express.User | false, info: { message: string } | undefined) => {
       if (err) {
         return next(err);
       }

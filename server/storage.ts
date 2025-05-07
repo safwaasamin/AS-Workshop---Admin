@@ -442,15 +442,20 @@ export class MemStorage implements IStorage {
   async getTopPerformers(eventId: number, limit: number = 5): Promise<any[]> {
     const eventAttendees = await this.getAttendeesByEvent(eventId);
     
-    // Sort by score (descending) and take the top performers
+    // Handle null scores properly
     return eventAttendees
-      .filter(a => a.status === 'completed' && a.score > 0)
-      .sort((a, b) => b.score - a.score)
+      .filter(a => a.status === 'completed' && (a.score !== null && a.score > 0))
+      .sort((a, b) => {
+        // Handle null scores in sort
+        const scoreA = a.score || 0;
+        const scoreB = b.score || 0;
+        return scoreB - scoreA;
+      })
       .slice(0, limit)
       .map(a => ({
         id: a.id,
         name: a.name,
-        score: a.score,
+        score: a.score || 0,
         completionTime: a.completionTime || '3h 00m',
         initials: a.name.split(' ').map(n => n[0]).join('').toUpperCase()
       }));
