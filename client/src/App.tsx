@@ -4,7 +4,7 @@ import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { isAuthenticated } from "./lib/auth";
+import { useAuth } from "./lib/auth";
 
 // Pages
 import Login from "@/pages/Login";
@@ -19,24 +19,34 @@ import NotFound from "@/pages/not-found";
 // Protected route component
 function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
   const [, setLocation] = useLocation();
+  const { user, isLoading } = useAuth();
   
   useEffect(() => {
-    if (!isAuthenticated()) {
+    if (!isLoading && !user) {
       setLocation('/login');
     }
-  }, [setLocation]);
+  }, [user, isLoading, setLocation]);
   
-  return isAuthenticated() ? <Component /> : null;
+  if (isLoading) {
+    return <div className="d-flex justify-content-center align-items-center vh-100">
+      <div className="spinner-border text-primary" role="status">
+        <span className="visually-hidden">Loading...</span>
+      </div>
+    </div>;
+  }
+  
+  return user ? <Component /> : null;
 }
 
 function Router() {
   const [match] = useRoute("/");
+  const { user, isLoading } = useAuth();
   
   useEffect(() => {
-    if (match && !isAuthenticated()) {
+    if (match && !isLoading && !user) {
       window.location.href = "/login";
     }
-  }, [match]);
+  }, [match, user, isLoading]);
   
   return (
     <Switch>

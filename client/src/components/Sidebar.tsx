@@ -1,6 +1,6 @@
 import React from "react";
 import { Link, useLocation } from "wouter";
-import { useLogout } from "@/lib/auth";
+import { useAuth } from "@/lib/auth";
 
 interface SidebarProps {
   className?: string;
@@ -8,7 +8,7 @@ interface SidebarProps {
 
 export function Sidebar({ className = "" }: SidebarProps) {
   const [location] = useLocation();
-  const logout = useLogout();
+  const { logoutMutation } = useAuth();
   
   const isActive = (path: string) => {
     return location === path;
@@ -73,7 +73,7 @@ export function Sidebar({ className = "" }: SidebarProps) {
         </ul>
         
         <div className="px-3 mt-5 pt-5">
-          <button onClick={logout} className="btn btn-outline-light w-100">
+          <button onClick={() => logoutMutation.mutate()} className="btn btn-outline-light w-100">
             <i className="bi bi-box-arrow-right me-2"></i>
             Logout
           </button>

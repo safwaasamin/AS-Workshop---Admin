@@ -1,6 +1,7 @@
-import { apiRequest } from "./queryClient";
+import { apiRequest, getQueryFn } from "./queryClient";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient } from "./queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 // Types
 export interface LoginCredentials {
@@ -8,9 +9,12 @@ export interface LoginCredentials {
   password: string;
 }
 
-export interface AuthResponse {
-  token: string;
-  user: User;
+export interface RegisterCredentials {
+  username: string;
+  email: string;
+  password: string;
+  name: string;
+  role?: string;
 }
 
 export interface User {
@@ -21,85 +25,98 @@ export interface User {
   role: string;
 }
 
-// LocalStorage keys
-const TOKEN_KEY = 'auth_token';
-const USER_KEY = 'auth_user';
+// Hook for authentication
+export function useAuth() {
+  const { toast } = useToast();
+  
+  const {
+    data: user,
+    error,
+    isLoading,
+    refetch,
+  } = useQuery<User | null>({
+    queryKey: ['/api/user'],
+    queryFn: getQueryFn({ on401: "returnNull" }),
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  });
 
-// Helper functions
-export const setAuth = (authResponse: AuthResponse) => {
-  localStorage.setItem(TOKEN_KEY, authResponse.token);
-  localStorage.setItem(USER_KEY, JSON.stringify(authResponse.user));
-};
-
-export const getToken = (): string | null => {
-  return localStorage.getItem(TOKEN_KEY);
-};
-
-export const getUser = (): User | null => {
-  const userJson = localStorage.getItem(USER_KEY);
-  return userJson ? JSON.parse(userJson) : null;
-};
-
-export const clearAuth = () => {
-  localStorage.removeItem(TOKEN_KEY);
-  localStorage.removeItem(USER_KEY);
-};
-
-export const isAuthenticated = (): boolean => {
-  return !!getToken();
-};
-
-// React Query hooks
-export const useLogin = () => {
-  return useMutation({
+  const loginMutation = useMutation({
     mutationFn: async (credentials: LoginCredentials) => {
-      const response = await apiRequest("POST", "/api/auth/login", credentials);
-      const data: AuthResponse = await response.json();
-      return data;
+      const res = await apiRequest("POST", "/api/login", credentials);
+      return res.json();
     },
-    onSuccess: (data) => {
-      setAuth(data);
-      queryClient.invalidateQueries({ queryKey: ['/api/users/me'] });
-    }
+    onSuccess: (user: User) => {
+      queryClient.setQueryData(["/api/user"], user);
+      toast({
+        title: "Login successful",
+        description: `Welcome back, ${user.name}!`,
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Login failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
   });
-};
 
-export const useLogout = () => {
-  return () => {
-    clearAuth();
-    queryClient.clear();
-    window.location.href = '/';
+  const registerMutation = useMutation({
+    mutationFn: async (credentials: RegisterCredentials) => {
+      const res = await apiRequest("POST", "/api/register", credentials);
+      return res.json();
+    },
+    onSuccess: (user: User) => {
+      queryClient.setQueryData(["/api/user"], user);
+      toast({
+        title: "Registration successful",
+        description: `Welcome, ${user.name}!`,
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Registration failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const logoutMutation = useMutation({
+    mutationFn: async () => {
+      await apiRequest("POST", "/api/logout");
+    },
+    onSuccess: () => {
+      queryClient.setQueryData(["/api/user"], null);
+      toast({
+        title: "Logged out",
+        description: "You have been successfully logged out.",
+      });
+      // Clear all queries to ensure fresh data after login
+      queryClient.clear();
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Logout failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  return {
+    user,
+    isLoading,
+    error,
+    loginMutation,
+    logoutMutation,
+    registerMutation,
+    refetch,
   };
-};
+}
 
-export const useCurrentUser = () => {
-  return useQuery({
-    queryKey: ['/api/users/me'],
-    queryFn: async () => {
-      if (!isAuthenticated()) {
-        return null;
-      }
-      
-      try {
-        const response = await fetch('/api/users/me', {
-          headers: {
-            'Authorization': `Bearer ${getToken()}`
-          },
-          credentials: 'include'
-        });
-        
-        if (!response.ok) {
-          throw new Error('Failed to fetch user');
-        }
-        
-        return await response.json();
-      } catch (error) {
-        clearAuth();
-        throw error;
-      }
-    },
-    retry: false,
-    staleTime: Infinity,
-    enabled: isAuthenticated()
-  });
+// Helper for checking if user is authenticated
+export const isAuthenticated = (): boolean => {
+  const user = queryClient.getQueryData<User | null>(['/api/user']);
+  return !!user;
 };

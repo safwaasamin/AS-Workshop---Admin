@@ -1,13 +1,12 @@
 import React from "react";
-import { useCurrentUser, useLogout } from "@/lib/auth";
+import { useAuth } from "@/lib/auth";
 
 interface HeaderProps {
   eventName?: string;
 }
 
 export function Header({ eventName = "Tech Conference 2023" }: HeaderProps) {
-  const { data: user, isLoading } = useCurrentUser();
-  const logout = useLogout();
+  const { user, isLoading, logoutMutation } = useAuth();
   
   return (
     <nav className="navbar navbar-expand-lg navbar-light bg-white border-bottom py-3">
@@ -28,7 +27,7 @@ export function Header({ eventName = "Tech Conference 2023" }: HeaderProps) {
               <li><a className="dropdown-item" href="#profile">Profile</a></li>
               <li><a className="dropdown-item" href="#settings">Settings</a></li>
               <li><hr className="dropdown-divider" /></li>
-              <li><a className="dropdown-item" href="#" onClick={logout}>Logout</a></li>
+              <li><a className="dropdown-item" href="#" onClick={() => logoutMutation.mutate()}>Logout</a></li>
             </ul>
           </div>
         </div>

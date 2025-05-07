@@ -1,21 +1,21 @@
 import React, { useState, useEffect } from "react";
 import { useLocation } from "wouter";
-import { useLogin, isAuthenticated } from "@/lib/auth";
+import { useAuth } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [, setLocation] = useLocation();
-  const login = useLogin();
+  const { loginMutation, user } = useAuth();
   const { toast } = useToast();
 
   // Redirect if already authenticated
   useEffect(() => {
-    if (isAuthenticated()) {
+    if (user) {
       setLocation("/");
     }
-  }, [setLocation]);
+  }, [user, setLocation]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,7 +30,7 @@ export default function Login() {
     }
     
     try {
-      await login.mutateAsync({ email, password });
+      await loginMutation.mutateAsync({ email, password });
       setLocation("/");
     } catch (error) {
       toast({
@@ -82,9 +82,9 @@ export default function Login() {
                     <button 
                       type="submit" 
                       className="btn btn-primary btn-lg"
-                      disabled={login.isPending}
+                      disabled={loginMutation.isPending}
                     >
-                      {login.isPending ? (
+                      {loginMutation.isPending ? (
                         <>
                           <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
                           Signing In...
@@ -94,7 +94,7 @@ export default function Login() {
                   </div>
                 </form>
                 
-                {login.isError && (
+                {loginMutation.isError && (
                   <div className="alert alert-danger mt-3" role="alert">
                     Invalid email or password. Please try again.
                   </div>
