@@ -1,14 +1,31 @@
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Loading } from "@/components/ui/loading";
-import { Attendee } from "@shared/schema";
+
+// Define an extended Attendee interface with the properties we need
+interface AttendeeWithInitials {
+  id: number;
+  name: string;
+  email: string;
+  company: string | null;
+  position: string | null;
+  phone: string | null;
+  status: string;
+  registrationDate: string;
+  username: string | null;
+  password: string | null;
+  mentorId: number | null;
+  score: number | null;
+  completionTime: string | null;
+  initials: string;
+}
 
 interface ApplicantListProps {
   eventId: number;
 }
 
 export function ApplicantList({ eventId }: ApplicantListProps) {
-  const { data, isLoading, error } = useQuery<Attendee[]>({
+  const { data, isLoading, error } = useQuery<AttendeeWithInitials[]>({
     queryKey: [`/api/events/${eventId}/attendees`],
     enabled: !!eventId,
   });
@@ -38,7 +55,7 @@ export function ApplicantList({ eventId }: ApplicantListProps) {
   
   // Get the most recent 10 applicants
   const recentApplicants = [...data].sort((a, b) => {
-    return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
+    return new Date(b.registrationDate || 0).getTime() - new Date(a.registrationDate || 0).getTime();
   }).slice(0, 10);
   
   return (

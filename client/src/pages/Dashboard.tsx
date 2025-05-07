@@ -64,6 +64,16 @@ export default function Dashboard() {
               <ProgressChart eventId={eventId} />
             </div>
           </div>
+
+          {/* Applicant List */}
+          <div className="row mt-4">
+            <div className="col-12">
+              <ApplicantList eventId={eventId} />
+            </div>
+          </div>
+          
+          {/* Import Attendees Modal */}
+          <ImportAttendees eventId={eventId} />
           
           <Footer />
         </div>
