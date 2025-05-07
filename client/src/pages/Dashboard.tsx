@@ -5,6 +5,8 @@ import { Footer } from "@/components/Footer";
 import { DashboardStats } from "@/components/DashboardStats";
 import { TopPerformers } from "@/components/TopPerformers";
 import { ProgressChart } from "@/components/ProgressChart";
+import { ApplicantList } from "@/components/ApplicantList";
+import { ImportAttendees } from "@/components/ImportAttendees";
 import { useQuery } from "@tanstack/react-query";
 import { Loading } from "@/components/ui/loading";
 
@@ -12,7 +14,7 @@ export default function Dashboard() {
   // For demo purposes, use event ID 1
   const eventId = 1;
   
-  const { data: events, isLoading, error } = useQuery({
+  const { data: events, isLoading, error } = useQuery<any[]>({
     queryKey: ['/api/events'],
   });
   
