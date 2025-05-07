@@ -2,6 +2,7 @@ import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Menu, MenuIcon } from "lucide-react";
+import logoSvg from "@/assets/logo.svg";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -46,9 +47,12 @@ export function Header({ eventName = "Tech Conference 2023", toggleSidebar }: He
           <MenuIcon className="h-5 w-5" />
           <span className="sr-only">Toggle menu</span>
         </Button>
-        <h1 className="text-xl font-semibold">
-          Admin Panel | <span className="text-blue-600">{eventName}</span>
-        </h1>
+        <div className="flex items-center">
+          <img src={logoSvg} alt="AspiraSys IT Workshop Logo" className="h-10 mr-3" />
+          <h1 className="text-xl font-semibold">
+            <span className="text-blue-600">{eventName}</span>
+          </h1>
+        </div>
       </div>
       <div className="flex items-center gap-4">
         <DropdownMenu>

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="200" height="50" viewBox="0 0 200 50" xmlns="http://www.w3.org/2000/svg">
+  <!-- Gradient Background -->
+  <defs>
+    <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4a6bff" />
+      <stop offset="100%" stop-color="#2e45b8" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Main Logo Shape -->
+  <rect x="5" y="10" width="40" height="30" rx="5" fill="url(#logoGradient)" />
+  
+  <!-- Tech Elements -->
+  <circle cx="15" cy="20" r="3" fill="white" />
+  <circle cx="25" cy="20" r="3" fill="white" />
+  <circle cx="35" cy="20" r="3" fill="white" />
+  
+  <line x1="15" y1="23" x2="25" y2="23" stroke="white" stroke-width="1.5" />
+  <line x1="25" y1="23" x2="35" y2="23" stroke="white" stroke-width="1.5" />
+  
+  <line x1="15" y1="28" x2="35" y2="28" stroke="white" stroke-width="1.5" />
+  <line x1="20" y1="32" x2="30" y2="32" stroke="white" stroke-width="1.5" />
+  
+  <!-- Text -->
+  <text x="55" y="27" font-family="Arial, sans-serif" font-weight="bold" font-size="16" fill="#2e45b8">AspiraSys</text>
+  <text x="55" y="38" font-family="Arial, sans-serif" font-size="10" fill="#6c757d">IT Workshop</text>
+</svg>

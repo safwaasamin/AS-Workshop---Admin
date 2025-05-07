@@ -18,7 +18,8 @@ export function Sidebar({ className = "" }: SidebarProps) {
     <nav className={`sidebar bg-dark text-white col-md-3 col-lg-2 d-md-block ${className}`}>
       <div className="position-sticky pt-3">
         <div className="p-3 mb-4 border-bottom border-secondary">
-          <h5 className="text-uppercase fw-bold text-center">Event Coordinator</h5>
+          <h5 className="text-uppercase fw-bold text-center">AspiraSys IT Workshop</h5>
+          <p className="text-center text-white-50 small mb-0">Event Coordinator</p>
         </div>
         
         <ul className="nav flex-column px-3">
