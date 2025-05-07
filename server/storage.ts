@@ -11,6 +11,9 @@ import {
 
 // Interface for storage operations
 export interface IStorage {
+  // Session store for authentication
+  sessionStore: any;
+
   // User operations
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
@@ -75,6 +78,7 @@ export class MemStorage implements IStorage {
   private feedbackResponses: Map<number, FeedbackResponse>;
   private tasks: Map<number, Task>;
   private taskProgress: Map<number, TaskProgress>;
+  public sessionStore: any;
   
   // Counters for generating IDs
   private userCounter: number;
@@ -112,6 +116,8 @@ export class MemStorage implements IStorage {
       email: 'admin@example.com',
       name: 'Admin User',
       role: 'admin'
+    }).then(() => {
+      console.log('Default admin user created: admin@example.com / password');
     });
     
     // Create a sample event
