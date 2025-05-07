@@ -38,7 +38,7 @@ export default function Dashboard() {
       <Sidebar />
       
       <main id="page-content" className="col-md-9 ms-sm-auto col-lg-10 px-md-4">
-        <Header eventName={events && events[0] ? events[0].name : "AspiraSys IT Workshop 2023"} />
+        <Header eventName={events && events[0] ? events[0].name : "AspiraSys Workshop System"} />
         
         <div className="container-fluid py-4">
           <div className="d-flex justify-content-between align-items-center mb-4">

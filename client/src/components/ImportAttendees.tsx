@@ -129,7 +129,7 @@ export function ImportAttendees({ eventId }: ImportAttendeesProps) {
     const data = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
     
     // Save the file
-    saveAs(data, `AspiraSys_Workshop_Credentials_${new Date().toISOString().split('T')[0]}.xlsx`);
+    saveAs(data, `AspiraSys_Workshop_System_Credentials_${new Date().toISOString().split('T')[0]}.xlsx`);
     
     // Close modal
     const modal = document.getElementById('importAttendeesModal');
@@ -160,7 +160,7 @@ export function ImportAttendees({ eventId }: ImportAttendeesProps) {
           </div>
           <div className="modal-body">
             <div className="mb-4">
-              <p>Upload a CSV or Excel file with applicant data for AspiraSys IT Workshop. The file should include the following columns:</p>
+              <p>Upload a CSV or Excel file with applicant data for AspiraSys Workshop System. The file should include the following columns:</p>
               <ul className="small text-muted">
                 <li><strong>Name</strong> (required) - Full name of the applicant</li>
                 <li><strong>Email</strong> (required) - Will be used as login ID</li>

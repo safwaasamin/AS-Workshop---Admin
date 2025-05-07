@@ -18,7 +18,7 @@ interface HeaderProps {
   toggleSidebar?: () => void;
 }
 
-export function Header({ eventName = "Tech Conference 2023", toggleSidebar }: HeaderProps) {
+export function Header({ eventName = "AspiraSys Workshop System", toggleSidebar }: HeaderProps) {
   const { user, isLoading, logoutMutation } = useAuth();
   
   const handleLogout = () => {
@@ -48,7 +48,7 @@ export function Header({ eventName = "Tech Conference 2023", toggleSidebar }: He
           <span className="sr-only">Toggle menu</span>
         </Button>
         <div className="flex items-center">
-          <img src={logoSvg} alt="AspiraSys IT Workshop Logo" className="h-10 mr-3" />
+          <img src={logoSvg} alt="AspiraSys Workshop System Logo" className="h-10 mr-3" />
           <h1 className="text-xl font-semibold">
             <span className="text-blue-600">{eventName}</span>
           </h1>

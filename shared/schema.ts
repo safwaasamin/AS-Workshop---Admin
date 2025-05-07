@@ -69,6 +69,8 @@ export const insertAttendeeSchema = createInsertSchema(attendees).pick({
   username: true,
   password: true,
   mentorId: true,
+  score: true,
+  completionTime: true,
 });
 
 // Mentors table

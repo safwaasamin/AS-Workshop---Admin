@@ -122,7 +122,7 @@ export class MemStorage implements IStorage {
     
     // Create a sample event
     this.createEvent({
-      name: 'AspiraSys IT Workshop 2023',
+      name: 'AspiraSys Workshop System',
       description: 'Technical skill development workshop',
       startDate: new Date('2023-09-15'),
       endDate: new Date('2023-09-20'),
