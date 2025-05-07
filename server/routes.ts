@@ -1,8 +1,8 @@
-import express, { type Express, Request, Response } from "express";
+import express, { type Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import multer from "multer";
-import { authenticateToken, authenticate, hashPassword } from "./auth";
+import { setupAuth, hashPassword } from "./auth";
 import { z } from "zod";
 import { 
   insertUserSchema, 
@@ -37,48 +37,21 @@ const upload = multer({
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Auth routes
-  app.post("/api/auth/login", async (req: Request, res: Response) => {
-    try {
-      const { email, password } = req.body;
-      
-      if (!email || !password) {
-        return res.status(400).json({ message: "Email and password are required" });
-      }
-      
-      const result = await authenticate(email, password);
-      
-      if (!result) {
-        return res.status(401).json({ message: "Invalid email or password" });
-      }
-      
-      res.json(result);
-    } catch (error) {
-      console.error("Login error:", error);
-      res.status(500).json({ message: "Server error" });
-    }
-  });
+  // Set up authentication (Passport, sessions, etc.)
+  setupAuth(app);
 
-  // User routes
-  app.get("/api/users/me", authenticateToken, async (req: Request, res: Response) => {
-    try {
-      const { userId } = (req as any).user;
-      const user = await storage.getUser(userId);
-      
-      if (!user) {
-        return res.status(404).json({ message: "User not found" });
-      }
-      
-      const { password, ...userWithoutPassword } = user;
-      res.json(userWithoutPassword);
-    } catch (error) {
-      console.error("Error getting user:", error);
-      res.status(500).json({ message: "Server error" });
+  // User routes - getCurrentUser is already handled by setupAuth
+
+  // Authentication middleware for protected routes
+  const isAuthenticated = (req: Request, res: Response, next: NextFunction) => {
+    if (req.isAuthenticated()) {
+      return next();
     }
-  });
+    res.status(401).json({ message: "Unauthorized" });
+  };
 
   // Event routes
-  app.get("/api/events", authenticateToken, async (req: Request, res: Response) => {
+  app.get("/api/events", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const events = await storage.getAllEvents();
       res.json(events);
@@ -88,7 +61,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/events/:id", authenticateToken, async (req: Request, res: Response) => {
+  app.get("/api/events/:id", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const eventId = parseInt(req.params.id);
       const event = await storage.getEvent(eventId);
@@ -105,7 +78,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Dashboard stats
-  app.get("/api/events/:id/stats", authenticateToken, async (req: Request, res: Response) => {
+  app.get("/api/events/:id/stats", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const eventId = parseInt(req.params.id);
       const event = await storage.getEvent(eventId);
@@ -123,7 +96,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Top performers
-  app.get("/api/events/:id/top-performers", authenticateToken, async (req: Request, res: Response) => {
+  app.get("/api/events/:id/top-performers", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const eventId = parseInt(req.params.id);
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 5;
@@ -142,7 +115,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Attendee routes
-  app.get("/api/events/:id/attendees", authenticateToken, async (req: Request, res: Response) => {
+  app.get("/api/events/:id/attendees", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const eventId = parseInt(req.params.id);
       const attendees = await storage.getAttendeesByEvent(eventId);
@@ -160,7 +133,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/events/:id/attendees", authenticateToken, async (req: Request, res: Response) => {
+  app.post("/api/events/:id/attendees", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const eventId = parseInt(req.params.id);
       const event = await storage.getEvent(eventId);
@@ -187,7 +160,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Import attendees from Excel/CSV
-  app.post("/api/events/:id/import-attendees", authenticateToken, upload.single('file'), async (req: Request, res: Response) => {
+  app.post("/api/events/:id/import-attendees", isAuthenticated, upload.single('file'), async (req: Request, res: Response) => {
     try {
       const eventId = parseInt(req.params.id);
       const event = await storage.getEvent(eventId);
@@ -254,7 +227,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Mentor routes
-  app.get("/api/events/:id/mentors", authenticateToken, async (req: Request, res: Response) => {
+  app.get("/api/events/:id/mentors", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const eventId = parseInt(req.params.id);
       const mentors = await storage.getMentorsByEvent(eventId);
@@ -272,7 +245,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/events/:id/mentors", authenticateToken, async (req: Request, res: Response) => {
+  app.post("/api/events/:id/mentors", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const eventId = parseInt(req.params.id);
       const event = await storage.getEvent(eventId);
@@ -299,7 +272,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Assign mentors to attendees
-  app.post("/api/events/:id/assign-mentors", authenticateToken, async (req: Request, res: Response) => {
+  app.post("/api/events/:id/assign-mentors", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const eventId = parseInt(req.params.id);
       const { mentorId, attendeeIds, sendNotification } = req.body;
@@ -343,7 +316,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Feedback routes
-  app.get("/api/events/:id/feedback-questions", authenticateToken, async (req: Request, res: Response) => {
+  app.get("/api/events/:id/feedback-questions", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const eventId = parseInt(req.params.id);
       const questions = await storage.getFeedbackQuestionsByEvent(eventId);
@@ -354,7 +327,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/events/:id/feedback-questions", authenticateToken, async (req: Request, res: Response) => {
+  app.post("/api/events/:id/feedback-questions", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const eventId = parseInt(req.params.id);
       const event = await storage.getEvent(eventId);
@@ -381,7 +354,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Task routes
-  app.get("/api/events/:id/tasks", authenticateToken, async (req: Request, res: Response) => {
+  app.get("/api/events/:id/tasks", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const eventId = parseInt(req.params.id);
       const tasks = await storage.getTasksByEvent(eventId);
@@ -392,7 +365,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/events/:id/tasks", authenticateToken, async (req: Request, res: Response) => {
+  app.post("/api/events/:id/tasks", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const eventId = parseInt(req.params.id);
       const event = await storage.getEvent(eventId);
@@ -419,7 +392,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Task progress routes
-  app.get("/api/tasks/:id/progress", authenticateToken, async (req: Request, res: Response) => {
+  app.get("/api/tasks/:id/progress", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const taskId = parseInt(req.params.id);
       const progress = await storage.getTaskProgressByTask(taskId);
@@ -430,7 +403,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/tasks/:id/progress", authenticateToken, async (req: Request, res: Response) => {
+  app.post("/api/tasks/:id/progress", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const taskId = parseInt(req.params.id);
       const task = await storage.getTask(taskId);
@@ -457,7 +430,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Report routes - Generate reports for event
-  app.get("/api/events/:id/reports", authenticateToken, async (req: Request, res: Response) => {
+  app.get("/api/events/:id/reports", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const eventId = parseInt(req.params.id);
       const event = await storage.getEvent(eventId);
