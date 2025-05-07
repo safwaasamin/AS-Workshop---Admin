@@ -150,7 +150,12 @@ export class MemStorage implements IStorage {
 
   async createUser(user: InsertUser): Promise<User> {
     const id = this.userCounter++;
-    const newUser: User = { ...user, id };
+    // Ensure role is set (default to 'user' if not provided)
+    const newUser: User = { 
+      ...user, 
+      id,
+      role: user.role || 'user'
+    };
     this.users.set(id, newUser);
     return newUser;
   }
@@ -166,7 +171,14 @@ export class MemStorage implements IStorage {
   
   async createEvent(event: InsertEvent): Promise<Event> {
     const id = this.eventCounter++;
-    const newEvent: Event = { ...event, id };
+    // Ensure required fields are set with defaults
+    const newEvent: Event = { 
+      ...event, 
+      id,
+      status: event.status || "upcoming",
+      description: event.description || null,
+      location: event.location || null
+    };
     this.events.set(id, newEvent);
     return newEvent;
   }
@@ -194,7 +206,21 @@ export class MemStorage implements IStorage {
   async createAttendee(attendee: InsertAttendee): Promise<Attendee> {
     const id = this.attendeeCounter++;
     const registrationDate = new Date();
-    const newAttendee: Attendee = { ...attendee, id, registrationDate, score: 0, completionTime: '' };
+    // Ensure all required fields are set with appropriate defaults
+    const newAttendee: Attendee = { 
+      ...attendee, 
+      id, 
+      registrationDate, 
+      status: attendee.status || "registered",
+      username: attendee.username || null,
+      password: attendee.password || null,
+      company: attendee.company || null,
+      position: attendee.position || null,
+      phone: attendee.phone || null,
+      mentorId: attendee.mentorId || null,
+      score: 0,
+      completionTime: null
+    };
     this.attendees.set(id, newAttendee);
     return newAttendee;
   }
@@ -236,7 +262,13 @@ export class MemStorage implements IStorage {
   
   async createMentor(mentor: InsertMentor): Promise<Mentor> {
     const id = this.mentorCounter++;
-    const newMentor: Mentor = { ...mentor, id, assignedCount: 0 };
+    // Ensure required fields with defaults
+    const newMentor: Mentor = { 
+      ...mentor, 
+      id, 
+      bio: mentor.bio || null,
+      assignedCount: 0
+    };
     this.mentors.set(id, newMentor);
     return newMentor;
   }
@@ -258,7 +290,9 @@ export class MemStorage implements IStorage {
     const existingMentor = this.mentors.get(id);
     if (!existingMentor) return undefined;
     
-    const updatedMentor = { ...existingMentor, assignedCount: existingMentor.assignedCount + 1 };
+    // Handle the case where assignedCount might be null
+    const currentCount = existingMentor.assignedCount || 0;
+    const updatedMentor = { ...existingMentor, assignedCount: currentCount + 1 };
     this.mentors.set(id, updatedMentor);
     return updatedMentor;
   }
@@ -313,7 +347,14 @@ export class MemStorage implements IStorage {
   
   async createTask(task: InsertTask): Promise<Task> {
     const id = this.taskCounter++;
-    const newTask: Task = { ...task, id };
+    // Ensure required fields with defaults
+    const newTask: Task = { 
+      ...task, 
+      id,
+      status: task.status || "pending",
+      description: task.description || null,
+      dueDate: task.dueDate || null
+    };
     this.tasks.set(id, newTask);
     return newTask;
   }
@@ -346,7 +387,16 @@ export class MemStorage implements IStorage {
   
   async createTaskProgress(progress: InsertTaskProgress): Promise<TaskProgress> {
     const id = this.taskProgressCounter++;
-    const newProgress: TaskProgress = { ...progress, id };
+    // Ensure required fields with defaults
+    const newProgress: TaskProgress = { 
+      ...progress, 
+      id,
+      status: progress.status || "not_started",
+      startTime: progress.startTime || null,
+      endTime: progress.endTime || null,
+      mentorReview: progress.mentorReview || null,
+      mentorRating: progress.mentorRating || null
+    };
     this.taskProgress.set(id, newProgress);
     return newProgress;
   }

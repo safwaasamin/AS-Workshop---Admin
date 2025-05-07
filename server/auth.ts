@@ -38,10 +38,35 @@ export const hashPassword = async (password: string): Promise<string> => {
 
 // Compare password function
 export const comparePasswords = async (supplied: string, stored: string): Promise<boolean> => {
-  const [hashed, salt] = stored.split(".");
-  const hashedBuf = Buffer.from(hashed, "hex");
-  const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
-  return timingSafeEqual(hashedBuf, suppliedBuf);
+  try {
+    // If stored password doesn't have the expected format, return false
+    if (!stored.includes('.')) {
+      console.log('Invalid stored password format');
+      return false;
+    }
+    
+    const [hashed, salt] = stored.split(".");
+    
+    // Extra validation to prevent buffer errors
+    if (!hashed || !salt) {
+      console.log('Missing hash or salt in stored password');
+      return false;
+    }
+    
+    const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
+    const storedBuf = Buffer.from(hashed, "hex");
+    
+    // Ensure buffers are the same length for timingSafeEqual
+    if (suppliedBuf.length !== storedBuf.length) {
+      console.log('Buffer length mismatch', suppliedBuf.length, storedBuf.length);
+      return false;
+    }
+    
+    return timingSafeEqual(storedBuf, suppliedBuf);
+  } catch (error) {
+    console.error('Password comparison error:', error);
+    return false;
+  }
 };
 
 // Setup authentication middleware
