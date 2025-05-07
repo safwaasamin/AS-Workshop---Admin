@@ -1,0 +1,92 @@
+Here is a **precise and complete prompt** you can paste directly into **Replit AI** to generate your **full-stack event coordinator admin panel** using **React, Node.js, MySQL, and Bootstrap**:
+
+---
+
+### ✅ **Replit AI Prompt**
+
+```
+Create a full-stack web application using:
+- Frontend: ReactJS (no TypeScript), Bootstrap 5, HTML5, CSS3, Axios
+- Backend: NodeJS + ExpressJS
+- Database: MySQL (use Sequelize ORM or raw queries)
+- Authentication: JWT-based login system
+- Architecture: Clean modular folder structure with separation of concerns
+
+### App Purpose:
+Admin Coordinator Panel to manage and analyze event-based tasks.
+
+### Pages & Features:
+
+1. **Login Page**
+   - Email/password fields
+   - JWT authentication
+   - On success, redirect to dashboard
+
+2. **Coordinator Dashboard**
+   - Show summary cards:
+     - Total applications received
+     - Participants started
+     - Participants completed
+     - Top performers list (name + score)
+   - Real-time updates via polling or socket (optional)
+
+3. **Attendee Management**
+   - Upload attendee list via Excel/CSV
+   - Auto-generate and display login credentials (username/password)
+   - Save attendee data to MySQL
+   - Display attendee table with filters
+
+4. **Mentor Assignment**
+   - Assign mentors to participants
+   - Save assignments in MySQL
+   - Option to simulate email (mock API call)
+
+5. **Feedback Setup**
+   - Upload up to 10 feedback questions
+   - Each question type: rating (1–5) or text comment
+   - Save questions in database
+   - Show feedback form preview
+
+6. **Task Monitoring**
+   - Show real-time task progress for each participant
+   - Display mentor review summary
+   - Use status badges (e.g., Not Started, In Progress, Completed)
+
+7. **Reports**
+   - Generate and download CSV or PDF reports
+     - Include scores, timing, feedback
+   - Use libraries like `pdfkit` or `json2csv`
+
+### UI Components:
+- Use Bootstrap UI: Cards, Tables, Modals, Forms
+- React Router for navigation
+- Reusable components: dashboard card, upload form, table rows, etc.
+
+### Layout:
+- **Header**: “Admin Panel | [Event Name] | Logout”
+- **Footer**: “Powered by AspiraSys | Empowering IT Aspirants, Transforming Lives.”
+
+### Folder Structure:
+```
+/client (React frontend)
+  /components
+  /pages
+  /services
+/server (Node backend)
+  /routes
+  /controllers
+  /models
+  /middlewares
+```
+
+### Extra:
+- Use `multer` for file uploads (Excel)
+- Use dotenv for config
+- Add error handling and loading UI
+```
+
+---
+
+💡 **Tip**: Run this in small chunks if the AI starts to slow down. You can start with the backend first (`/server`), then frontend (`/client`), then connect them together.
+
+Would you like a separate prompt for just the backend or frontend as well?
