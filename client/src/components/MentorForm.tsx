@@ -1,15 +1,15 @@
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 import { z } from "zod";
-import { useMutation } from "@tanstack/react-query";
-import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
+// Define form schema
 const mentorSchema = z.object({
-  name: z.string().min(2, "Name must be at least 2 characters"),
-  email: z.string().email("Invalid email address"),
-  expertise: z.string().min(2, "Expertise must be at least 2 characters"),
-  bio: z.string().optional().nullable(),
+  name: z.string().min(1, "Name is required"),
+  email: z.string().email("Valid email is required"),
+  expertise: z.string().min(1, "Expertise is required"),
+  bio: z.string().optional()
 });
 
 type MentorFormValues = z.infer<typeof mentorSchema>;
@@ -22,63 +22,51 @@ interface MentorFormProps {
     email: string;
     expertise: string;
     bio?: string | null;
-    assignedCount?: number;
+    assignedCount?: number | null;
   };
   onClose: () => void;
 }
 
 export function MentorForm({ eventId, mentor, onClose }: MentorFormProps) {
-  const { toast } = useToast();
-  
-  const { register, handleSubmit, formState: { errors } } = useForm<MentorFormValues>({
-    resolver: zodResolver(mentorSchema),
-    defaultValues: mentor ? {
-      name: mentor.name,
-      email: mentor.email,
-      expertise: mentor.expertise,
-      bio: mentor.bio || "",
-    } : {
-      name: "",
-      email: "",
-      expertise: "",
-      bio: "",
-    }
+  const [formData, setFormData] = useState<MentorFormValues>({
+    name: mentor?.name || '',
+    email: mentor?.email || '',
+    expertise: mentor?.expertise || '',
+    bio: mentor?.bio || ''
   });
   
+  const [errors, setErrors] = useState<Partial<Record<keyof MentorFormValues, string>>>({});
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  
+  // Create mutation
   const createMutation = useMutation({
     mutationFn: async (data: MentorFormValues) => {
-      const res = await apiRequest(
-        "POST", 
-        `/api/events/${eventId}/mentors`, 
-        data
-      );
-      return await res.json();
+      const response = await apiRequest("POST", `/api/events/${eventId}/mentors`, data);
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/events/${eventId}/mentors`] });
       toast({
         title: "Success",
-        description: "Mentor created successfully",
+        description: "Mentor added successfully",
       });
       onClose();
     },
     onError: (error: Error) => {
       toast({
         title: "Error",
-        description: `Failed to create mentor: ${error.message}`,
+        description: `Failed to add mentor: ${error.message}`,
         variant: "destructive",
       });
     },
   });
   
+  // Update mutation
   const updateMutation = useMutation({
     mutationFn: async (data: MentorFormValues) => {
-      const res = await apiRequest(
-        "PATCH", 
-        `/api/mentors/${mentor?.id}`, 
-        data
-      );
-      return await res.json();
+      const response = await apiRequest("PATCH", `/api/mentors/${mentor!.id}`, data);
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/events/${eventId}/mentors`] });
@@ -97,27 +85,67 @@ export function MentorForm({ eventId, mentor, onClose }: MentorFormProps) {
     },
   });
   
-  const onSubmit = (data: MentorFormValues) => {
-    if (mentor) {
-      updateMutation.mutate(data);
-    } else {
-      createMutation.mutate(data);
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+    
+    // Clear error for this field
+    if (errors[name as keyof MentorFormValues]) {
+      setErrors(prev => ({ ...prev, [name]: undefined }));
     }
   };
   
+  const validateForm = (): boolean => {
+    try {
+      mentorSchema.parse(formData);
+      setErrors({});
+      return true;
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        const newErrors: Partial<Record<keyof MentorFormValues, string>> = {};
+        err.errors.forEach(error => {
+          const path = error.path[0] as keyof MentorFormValues;
+          newErrors[path] = error.message;
+        });
+        setErrors(newErrors);
+      }
+      return false;
+    }
+  };
+  
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!validateForm()) {
+      return;
+    }
+    
+    if (mentor) {
+      updateMutation.mutate(formData);
+    } else {
+      createMutation.mutate(formData);
+    }
+  };
+  
+  const isPending = createMutation.isPending || updateMutation.isPending;
+  
   return (
-    <form onSubmit={handleSubmit(onSubmit)}>
+    <form onSubmit={handleSubmit}>
       <div className="modal-body">
         <div className="mb-3">
           <label htmlFor="name" className="form-label">Name *</label>
           <input 
             type="text" 
-            className={`form-control ${errors.name ? 'is-invalid' : ''}`} 
-            id="name" 
-            {...register("name")}
+            className={`form-control ${errors.name ? 'is-invalid' : ''}`}
+            id="name"
+            name="name"
+            value={formData.name}
+            onChange={handleChange}
+            placeholder="Full name of mentor"
+            required
           />
           {errors.name && (
-            <div className="invalid-feedback">{errors.name.message}</div>
+            <div className="invalid-feedback">{errors.name}</div>
           )}
         </div>
         
@@ -125,48 +153,48 @@ export function MentorForm({ eventId, mentor, onClose }: MentorFormProps) {
           <label htmlFor="email" className="form-label">Email *</label>
           <input 
             type="email" 
-            className={`form-control ${errors.email ? 'is-invalid' : ''}`} 
-            id="email" 
-            {...register("email")}
+            className={`form-control ${errors.email ? 'is-invalid' : ''}`}
+            id="email"
+            name="email"
+            value={formData.email}
+            onChange={handleChange}
+            placeholder="Email address"
+            required
           />
           {errors.email && (
-            <div className="invalid-feedback">{errors.email.message}</div>
+            <div className="invalid-feedback">{errors.email}</div>
           )}
         </div>
         
         <div className="mb-3">
-          <label htmlFor="expertise" className="form-label">Expertise *</label>
+          <label htmlFor="expertise" className="form-label">Area of Expertise *</label>
           <input 
             type="text" 
-            className={`form-control ${errors.expertise ? 'is-invalid' : ''}`} 
-            id="expertise" 
-            {...register("expertise")}
+            className={`form-control ${errors.expertise ? 'is-invalid' : ''}`}
+            id="expertise"
+            name="expertise"
+            value={formData.expertise}
+            onChange={handleChange}
+            placeholder="e.g., Frontend Development, Machine Learning, DevOps"
+            required
           />
           {errors.expertise && (
-            <div className="invalid-feedback">{errors.expertise.message}</div>
+            <div className="invalid-feedback">{errors.expertise}</div>
           )}
         </div>
         
         <div className="mb-3">
-          <label htmlFor="bio" className="form-label">Bio</label>
+          <label htmlFor="bio" className="form-label">Bio / Profile</label>
           <textarea 
             className="form-control" 
-            id="bio" 
+            id="bio"
+            name="bio"
             rows={3}
-            {...register("bio")}
+            value={formData.bio || ''}
+            onChange={handleChange}
+            placeholder="Brief description of mentor's background and experience"
           ></textarea>
         </div>
-        
-        {mentor && (
-          <div className="alert alert-info">
-            <div className="d-flex align-items-center">
-              <i className="bi bi-info-circle me-2"></i>
-              <div>
-                <strong>Assigned Attendees:</strong> {mentor.assignedCount || 0}
-              </div>
-            </div>
-          </div>
-        )}
       </div>
       
       <div className="modal-footer">
@@ -174,22 +202,21 @@ export function MentorForm({ eventId, mentor, onClose }: MentorFormProps) {
           type="button" 
           className="btn btn-outline-secondary" 
           onClick={onClose}
+          disabled={isPending}
         >
           Cancel
         </button>
         <button 
           type="submit" 
           className="btn btn-primary"
-          disabled={createMutation.isPending || updateMutation.isPending}
+          disabled={isPending}
         >
-          {(createMutation.isPending || updateMutation.isPending) ? (
+          {isPending ? (
             <>
-              <span className="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
-              {mentor ? 'Updating...' : 'Creating...'}
+              <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+              {mentor ? 'Saving...' : 'Adding...'}
             </>
-          ) : (
-            mentor ? 'Update Mentor' : 'Create Mentor'
-          )}
+          ) : (mentor ? 'Save Changes' : 'Add Mentor')}
         </button>
       </div>
     </form>

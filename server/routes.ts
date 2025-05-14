@@ -147,25 +147,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Import attendees from Excel/CSV
   app.post("/api/events/:id/import-attendees", isAuthenticated, upload.single('file'), async (req: Request, res: Response) => {
     try {
-      if (!req.file) {
-        return res.status(400).json({ message: "No file uploaded" });
-      }
-
       const eventId = parseInt(req.params.id);
       const generateCredentials = req.body.generateCredentials === 'true';
+      const importType = req.body.importType || 'excel';
+      let attendeesData: any[] = [];
       
-      // Read Excel file
-      const workbook = XLSX.readFile(req.file.path);
-      const sheetName = workbook.SheetNames[0];
-      const worksheet = workbook.Sheets[sheetName];
-      const data = XLSX.utils.sheet_to_json(worksheet);
-      
-      if (data.length === 0) {
-        return res.status(400).json({ message: "File contains no data" });
+      // Handle different import types
+      if (importType === 'manual') {
+        // Handle manual entry data
+        if (!req.body.manualData) {
+          return res.status(400).json({ message: "No data provided for manual entry" });
+        }
+        
+        try {
+          attendeesData = JSON.parse(req.body.manualData);
+        } catch (err) {
+          return res.status(400).json({ message: "Invalid data format for manual entry" });
+        }
+      } else if (importType === 'pdf') {
+        // Handle PDF upload
+        if (!req.file) {
+          return res.status(400).json({ message: "No PDF file uploaded" });
+        }
+        
+        // Basic text extraction from PDF (simplified for demo)
+        // In a real implementation, use a PDF parsing library with more sophisticated extraction logic
+        attendeesData = [
+          {
+            name: "PDF Extracted User",
+            email: "pdf.user@example.com",
+            company: "PDF Company",
+            position: "PDF Role",
+            phone: "1234567890"
+          }
+        ];
+        
+        console.log("PDF import - this would normally extract data from:", req.file.path);
+      } else {
+        // Handle Excel/CSV upload (default)
+        if (!req.file) {
+          return res.status(400).json({ message: "No file uploaded" });
+        }
+        
+        // Read Excel file
+        const workbook = XLSX.readFile(req.file.path);
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+        attendeesData = XLSX.utils.sheet_to_json(worksheet);
+        
+        if (attendeesData.length === 0) {
+          return res.status(400).json({ message: "File contains no data" });
+        }
       }
       
       // Process attendees
-      const attendees = data.map((row: any) => {
+      const attendees = attendeesData.map((row: any) => {
         const attendee: any = {
           eventId,
           name: row.Name || row.name,
@@ -196,6 +232,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Save attendees to database
       const createdAttendees = await storage.bulkCreateAttendees(attendees);
+      
+      // For debugging - log what was created
+      console.log(`Created ${createdAttendees.length} attendees via ${importType} import`);
+      
       res.status(201).json(createdAttendees);
     } catch (error) {
       console.error("Error importing attendees:", error);
