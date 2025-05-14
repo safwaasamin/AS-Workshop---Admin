@@ -98,6 +98,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Error creating attendee", error });
     }
   });
+  
+  app.get("/api/attendees/:id", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const attendeeId = parseInt(req.params.id);
+      const attendee = await storage.getAttendee(attendeeId);
+      
+      if (!attendee) {
+        return res.status(404).json({ message: "Attendee not found" });
+      }
+      
+      res.json(attendee);
+    } catch (error) {
+      res.status(500).json({ message: "Error fetching attendee", error });
+    }
+  });
+  
+  app.patch("/api/attendees/:id", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const attendeeId = parseInt(req.params.id);
+      const attendee = await storage.updateAttendee(attendeeId, req.body);
+      
+      if (!attendee) {
+        return res.status(404).json({ message: "Attendee not found" });
+      }
+      
+      res.json(attendee);
+    } catch (error) {
+      res.status(500).json({ message: "Error updating attendee", error });
+    }
+  });
+  
+  app.delete("/api/attendees/:id", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const attendeeId = parseInt(req.params.id);
+      const result = await storage.deleteAttendee(attendeeId);
+      
+      if (!result) {
+        return res.status(404).json({ message: "Attendee not found" });
+      }
+      
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ message: "Error deleting attendee", error });
+    }
+  });
 
   // Import attendees from Excel/CSV
   app.post("/api/events/:id/import-attendees", isAuthenticated, upload.single('file'), async (req: Request, res: Response) => {
@@ -182,6 +227,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Error creating mentor", error });
     }
   });
+  
+  app.get("/api/mentors/:id", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const mentorId = parseInt(req.params.id);
+      const mentor = await storage.getMentor(mentorId);
+      
+      if (!mentor) {
+        return res.status(404).json({ message: "Mentor not found" });
+      }
+      
+      res.json(mentor);
+    } catch (error) {
+      res.status(500).json({ message: "Error fetching mentor", error });
+    }
+  });
+  
+  app.patch("/api/mentors/:id", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const mentorId = parseInt(req.params.id);
+      const mentor = await storage.updateMentor(mentorId, req.body);
+      
+      if (!mentor) {
+        return res.status(404).json({ message: "Mentor not found" });
+      }
+      
+      res.json(mentor);
+    } catch (error) {
+      res.status(500).json({ message: "Error updating mentor", error });
+    }
+  });
+  
+  app.delete("/api/mentors/:id", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const mentorId = parseInt(req.params.id);
+      const result = await storage.deleteMentor(mentorId);
+      
+      if (!result) {
+        return res.status(404).json({ message: "Mentor not found" });
+      }
+      
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ message: "Error deleting mentor", error });
+    }
+  });
 
   // Mentor assignment
   app.post("/api/events/:id/assign-mentors", isAuthenticated, async (req: Request, res: Response) => {
@@ -253,6 +343,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(201).json(newTask);
     } catch (error) {
       res.status(500).json({ message: "Error creating task", error });
+    }
+  });
+  
+  app.get("/api/tasks/:id", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const taskId = parseInt(req.params.id);
+      const task = await storage.getTask(taskId);
+      
+      if (!task) {
+        return res.status(404).json({ message: "Task not found" });
+      }
+      
+      res.json(task);
+    } catch (error) {
+      res.status(500).json({ message: "Error fetching task", error });
+    }
+  });
+  
+  app.patch("/api/tasks/:id", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const taskId = parseInt(req.params.id);
+      const task = await storage.updateTask(taskId, req.body);
+      
+      if (!task) {
+        return res.status(404).json({ message: "Task not found" });
+      }
+      
+      res.json(task);
+    } catch (error) {
+      res.status(500).json({ message: "Error updating task", error });
+    }
+  });
+  
+  app.delete("/api/tasks/:id", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const taskId = parseInt(req.params.id);
+      
+      // First, check if the task exists
+      const task = await storage.getTask(taskId);
+      if (!task) {
+        return res.status(404).json({ message: "Task not found" });
+      }
+      
+      // Delete task - we need to implement this in storage
+      await storage.updateTask(taskId, { status: 'deleted' });
+      
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ message: "Error deleting task", error });
     }
   });
 
