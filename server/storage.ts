@@ -1,15 +1,18 @@
 import {
-  users, type User, type InsertUser,
-  events, type Event, type InsertEvent,
-  attendees, type Attendee, type InsertAttendee,
-  mentors, type Mentor, type InsertMentor,
-  feedbackQuestions, type FeedbackQuestion, type InsertFeedbackQuestion,
-  feedbackResponses, type FeedbackResponse, type InsertFeedbackResponse,
-  tasks, type Task, type InsertTask,
-  taskProgress, type TaskProgress, type InsertTaskProgress
+  User, InsertUser, Event, InsertEvent, Attendee, InsertAttendee,
+  Mentor, InsertMentor, FeedbackQuestion, InsertFeedbackQuestion,
+  FeedbackResponse, InsertFeedbackResponse, Task, InsertTask,
+  TaskProgress, InsertTaskProgress, 
+  users, events, attendees, mentors, feedbackQuestions, feedbackResponses, tasks, taskProgress
 } from "@shared/schema";
+import { db, pool } from "./db";
+import { eq, desc, asc, sql, and, count } from "drizzle-orm";
+import bcrypt from "bcryptjs";
+import connectPg from "connect-pg-simple";
+import session from "express-session";
 
-// Interface for storage operations
+const PostgresSessionStore = connectPg(session);
+
 export interface IStorage {
   // Session store for authentication
   sessionStore: any;
@@ -66,396 +69,226 @@ export interface IStorage {
   // Dashboard statistics
   getDashboardStats(eventId: number): Promise<any>;
   getTopPerformers(eventId: number, limit: number): Promise<any[]>;
+  
+  // Initialize database with default data
+  initializeDefaultData(): Promise<void>;
 }
 
-// In-memory storage implementation
-export class MemStorage implements IStorage {
-  private users: Map<number, User>;
-  private events: Map<number, Event>;
-  private attendees: Map<number, Attendee>;
-  private mentors: Map<number, Mentor>;
-  private feedbackQuestions: Map<number, FeedbackQuestion>;
-  private feedbackResponses: Map<number, FeedbackResponse>;
-  private tasks: Map<number, Task>;
-  private taskProgress: Map<number, TaskProgress>;
-  public sessionStore: any;
+export class DatabaseStorage implements IStorage {
+  sessionStore: any;
   
-  // Counters for generating IDs
-  private userCounter: number;
-  private eventCounter: number;
-  private attendeeCounter: number;
-  private mentorCounter: number;
-  private feedbackQuestionCounter: number;
-  private feedbackResponseCounter: number;
-  private taskCounter: number;
-  private taskProgressCounter: number;
-
   constructor() {
-    this.users = new Map();
-    this.events = new Map();
-    this.attendees = new Map();
-    this.mentors = new Map();
-    this.feedbackQuestions = new Map();
-    this.feedbackResponses = new Map();
-    this.tasks = new Map();
-    this.taskProgress = new Map();
-    
-    this.userCounter = 1;
-    this.eventCounter = 1;
-    this.attendeeCounter = 1;
-    this.mentorCounter = 1;
-    this.feedbackQuestionCounter = 1;
-    this.feedbackResponseCounter = 1;
-    this.taskCounter = 1;
-    this.taskProgressCounter = 1;
-    
-    // Add a default admin user
-    this.createUser({
-      username: 'admin',
-      password: '$2a$10$sCiMJvQd5YtYe2yBlP4/4uXpXNGNFpnxd4jJY8EyQw.BQRCsIEiLC', // 'password' hashed
-      email: 'admin@example.com',
-      name: 'Admin User',
-      role: 'admin'
-    }).then(() => {
-      console.log('Default admin user created: admin@example.com / password');
-    });
-    
-    // Create a sample event
-    this.createEvent({
-      name: 'AspiraSys Workshop System',
-      description: 'Technical skill development workshop',
-      startDate: new Date('2023-09-15'),
-      endDate: new Date('2023-09-20'),
-      location: 'Bangalore, India',
-      status: 'active'
-    }).then(event => {
-      // Add a few sample attendees
-      this.createAttendee({
-        eventId: event.id,
-        name: 'Priya Sharma',
-        email: 'priya.sharma@example.com',
-        company: 'Tech Innovations',
-        position: 'Junior Developer',
-        phone: '9876543210',
-        status: 'registered',
-        username: 'priya.sharma@example.com',
-        password: 'abc123',
-        mentorId: null,
-        score: 0,
-        completionTime: null
-      });
-      
-      this.createAttendee({
-        eventId: event.id,
-        name: 'Rahul Patel',
-        email: 'rahul.patel@example.com',
-        company: 'Digital Solutions',
-        position: 'UI/UX Designer',
-        phone: '8765432109',
-        status: 'in_progress',
-        username: 'rahul.patel@example.com',
-        password: 'abc123',
-        mentorId: null,
-        score: 45,
-        completionTime: null
-      });
-      
-      this.createAttendee({
-        eventId: event.id,
-        name: 'Ananya Kumar',
-        email: 'ananya.k@example.com',
-        company: 'WebTech',
-        position: 'Software Engineer',
-        phone: '7654321098',
-        status: 'completed',
-        username: 'ananya.k@example.com',
-        password: 'abc123',
-        mentorId: null,
-        score: 92,
-        completionTime: '2h 15m'
-      });
+    this.sessionStore = new PostgresSessionStore({ 
+      pool, 
+      createTableIfMissing: true 
     });
   }
-
+  
   // User operations
   async getUser(id: number): Promise<User | undefined> {
-    return this.users.get(id);
+    const result = await db.select().from(users).where(eq(users.id, id));
+    return result[0];
   }
-
+  
   async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username.toLowerCase() === username.toLowerCase()
-    );
+    const result = await db.select().from(users)
+      .where(eq(sql`LOWER(${users.username})`, username.toLowerCase()));
+    return result[0];
   }
   
   async getUserByEmail(email: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.email.toLowerCase() === email.toLowerCase()
-    );
+    const result = await db.select().from(users)
+      .where(eq(sql`LOWER(${users.email})`, email.toLowerCase()));
+    return result[0];
   }
-
+  
   async createUser(user: InsertUser): Promise<User> {
-    const id = this.userCounter++;
-    // Ensure role is set (default to 'user' if not provided)
-    const newUser: User = { 
-      ...user, 
-      id,
-      role: user.role || 'user'
-    };
-    this.users.set(id, newUser);
-    return newUser;
+    const result = await db.insert(users).values(user).returning();
+    return result[0];
   }
-
+  
   // Event operations
   async getEvent(id: number): Promise<Event | undefined> {
-    return this.events.get(id);
+    const result = await db.select().from(events).where(eq(events.id, id));
+    return result[0];
   }
   
   async getAllEvents(): Promise<Event[]> {
-    return Array.from(this.events.values());
+    return await db.select().from(events);
   }
   
   async createEvent(event: InsertEvent): Promise<Event> {
-    const id = this.eventCounter++;
-    // Ensure required fields are set with defaults
-    const newEvent: Event = { 
-      ...event, 
-      id,
-      status: event.status || "upcoming",
-      description: event.description || null,
-      location: event.location || null
-    };
-    this.events.set(id, newEvent);
-    return newEvent;
+    const result = await db.insert(events).values(event).returning();
+    return result[0];
   }
   
   async updateEvent(id: number, event: Partial<InsertEvent>): Promise<Event | undefined> {
-    const existingEvent = this.events.get(id);
-    if (!existingEvent) return undefined;
-    
-    const updatedEvent = { ...existingEvent, ...event };
-    this.events.set(id, updatedEvent);
-    return updatedEvent;
+    const result = await db.update(events)
+      .set(event)
+      .where(eq(events.id, id))
+      .returning();
+    return result[0];
   }
-
+  
   // Attendee operations
   async getAttendee(id: number): Promise<Attendee | undefined> {
-    return this.attendees.get(id);
+    const result = await db.select().from(attendees).where(eq(attendees.id, id));
+    return result[0];
   }
   
   async getAttendeesByEvent(eventId: number): Promise<Attendee[]> {
-    return Array.from(this.attendees.values()).filter(
-      (attendee) => attendee.eventId === eventId
-    );
+    return await db.select().from(attendees)
+      .where(eq(attendees.eventId, eventId));
   }
   
   async createAttendee(attendee: InsertAttendee): Promise<Attendee> {
-    const id = this.attendeeCounter++;
-    const registrationDate = new Date();
-    // Ensure all required fields are set with appropriate defaults
-    const newAttendee: Attendee = { 
-      ...attendee, 
-      id, 
-      registrationDate, 
-      status: attendee.status || "registered",
-      username: attendee.username || null,
-      password: attendee.password || null,
-      company: attendee.company || null,
-      position: attendee.position || null,
-      phone: attendee.phone || null,
-      mentorId: attendee.mentorId || null,
-      score: 0,
-      completionTime: null
-    };
-    this.attendees.set(id, newAttendee);
-    return newAttendee;
+    const result = await db.insert(attendees).values(attendee).returning();
+    return result[0];
   }
   
   async updateAttendee(id: number, attendee: Partial<InsertAttendee>): Promise<Attendee | undefined> {
-    const existingAttendee = this.attendees.get(id);
-    if (!existingAttendee) return undefined;
-    
-    const updatedAttendee = { ...existingAttendee, ...attendee };
-    this.attendees.set(id, updatedAttendee);
-    return updatedAttendee;
+    const result = await db.update(attendees)
+      .set(attendee)
+      .where(eq(attendees.id, id))
+      .returning();
+    return result[0];
   }
   
   async deleteAttendee(id: number): Promise<boolean> {
-    return this.attendees.delete(id);
+    const result = await db.delete(attendees)
+      .where(eq(attendees.id, id));
+    return true;
   }
   
-  async bulkCreateAttendees(attendees: InsertAttendee[]): Promise<Attendee[]> {
-    const createdAttendees: Attendee[] = [];
-    
-    for (const attendee of attendees) {
-      const newAttendee = await this.createAttendee(attendee);
-      createdAttendees.push(newAttendee);
-    }
-    
-    return createdAttendees;
+  async bulkCreateAttendees(attendeesList: InsertAttendee[]): Promise<Attendee[]> {
+    const result = await db.insert(attendees).values(attendeesList).returning();
+    return result;
   }
-
+  
   // Mentor operations
   async getMentor(id: number): Promise<Mentor | undefined> {
-    return this.mentors.get(id);
+    const result = await db.select().from(mentors).where(eq(mentors.id, id));
+    return result[0];
   }
   
   async getMentorsByEvent(eventId: number): Promise<Mentor[]> {
-    return Array.from(this.mentors.values()).filter(
-      (mentor) => mentor.eventId === eventId
-    );
+    return await db.select().from(mentors)
+      .where(eq(mentors.eventId, eventId));
   }
   
   async createMentor(mentor: InsertMentor): Promise<Mentor> {
-    const id = this.mentorCounter++;
-    // Ensure required fields with defaults
-    const newMentor: Mentor = { 
-      ...mentor, 
-      id, 
-      bio: mentor.bio || null,
-      assignedCount: 0
-    };
-    this.mentors.set(id, newMentor);
-    return newMentor;
+    const result = await db.insert(mentors).values(mentor).returning();
+    return result[0];
   }
   
   async updateMentor(id: number, mentor: Partial<InsertMentor>): Promise<Mentor | undefined> {
-    const existingMentor = this.mentors.get(id);
-    if (!existingMentor) return undefined;
-    
-    const updatedMentor = { ...existingMentor, ...mentor };
-    this.mentors.set(id, updatedMentor);
-    return updatedMentor;
+    const result = await db.update(mentors)
+      .set(mentor)
+      .where(eq(mentors.id, id))
+      .returning();
+    return result[0];
   }
   
   async deleteMentor(id: number): Promise<boolean> {
-    return this.mentors.delete(id);
+    await db.delete(mentors).where(eq(mentors.id, id));
+    return true;
   }
   
   async incrementAssignedCount(id: number): Promise<Mentor | undefined> {
-    const existingMentor = this.mentors.get(id);
-    if (!existingMentor) return undefined;
+    const mentor = await this.getMentor(id);
+    if (!mentor) return undefined;
     
-    // Handle the case where assignedCount might be null
-    const currentCount = existingMentor.assignedCount || 0;
-    const updatedMentor = { ...existingMentor, assignedCount: currentCount + 1 };
-    this.mentors.set(id, updatedMentor);
-    return updatedMentor;
+    const newCount = (mentor.assignedCount || 0) + 1;
+    return await this.updateMentor(id, { assignedCount: newCount });
   }
-
+  
   // Feedback operations
   async getFeedbackQuestion(id: number): Promise<FeedbackQuestion | undefined> {
-    return this.feedbackQuestions.get(id);
+    const result = await db.select().from(feedbackQuestions)
+      .where(eq(feedbackQuestions.id, id));
+    return result[0];
   }
   
   async getFeedbackQuestionsByEvent(eventId: number): Promise<FeedbackQuestion[]> {
-    return Array.from(this.feedbackQuestions.values())
-      .filter((question) => question.eventId === eventId)
-      .sort((a, b) => a.order - b.order);
+    return await db.select().from(feedbackQuestions)
+      .where(eq(feedbackQuestions.eventId, eventId))
+      .orderBy(asc(feedbackQuestions.order));
   }
   
   async createFeedbackQuestion(question: InsertFeedbackQuestion): Promise<FeedbackQuestion> {
-    const id = this.feedbackQuestionCounter++;
-    const newQuestion: FeedbackQuestion = { ...question, id };
-    this.feedbackQuestions.set(id, newQuestion);
-    return newQuestion;
+    const result = await db.insert(feedbackQuestions).values(question).returning();
+    return result[0];
   }
   
   async createFeedbackResponse(response: InsertFeedbackResponse): Promise<FeedbackResponse> {
-    const id = this.feedbackResponseCounter++;
-    const newResponse: FeedbackResponse = { ...response, id };
-    this.feedbackResponses.set(id, newResponse);
-    return newResponse;
+    const result = await db.insert(feedbackResponses).values(response).returning();
+    return result[0];
   }
   
   async getFeedbackResponsesByQuestion(questionId: number): Promise<FeedbackResponse[]> {
-    return Array.from(this.feedbackResponses.values()).filter(
-      (response) => response.questionId === questionId
-    );
+    return await db.select().from(feedbackResponses)
+      .where(eq(feedbackResponses.questionId, questionId));
   }
   
   async getFeedbackResponsesByAttendee(attendeeId: number): Promise<FeedbackResponse[]> {
-    return Array.from(this.feedbackResponses.values()).filter(
-      (response) => response.attendeeId === attendeeId
-    );
+    return await db.select().from(feedbackResponses)
+      .where(eq(feedbackResponses.attendeeId, attendeeId));
   }
-
+  
   // Task operations
   async getTask(id: number): Promise<Task | undefined> {
-    return this.tasks.get(id);
+    const result = await db.select().from(tasks).where(eq(tasks.id, id));
+    return result[0];
   }
   
   async getTasksByEvent(eventId: number): Promise<Task[]> {
-    return Array.from(this.tasks.values()).filter(
-      (task) => task.eventId === eventId
-    );
+    return await db.select().from(tasks)
+      .where(eq(tasks.eventId, eventId));
   }
   
   async createTask(task: InsertTask): Promise<Task> {
-    const id = this.taskCounter++;
-    // Ensure required fields with defaults
-    const newTask: Task = { 
-      ...task, 
-      id,
-      status: task.status || "pending",
-      description: task.description || null,
-      dueDate: task.dueDate || null
-    };
-    this.tasks.set(id, newTask);
-    return newTask;
+    const result = await db.insert(tasks).values(task).returning();
+    return result[0];
   }
   
   async updateTask(id: number, task: Partial<InsertTask>): Promise<Task | undefined> {
-    const existingTask = this.tasks.get(id);
-    if (!existingTask) return undefined;
-    
-    const updatedTask = { ...existingTask, ...task };
-    this.tasks.set(id, updatedTask);
-    return updatedTask;
+    const result = await db.update(tasks)
+      .set(task)
+      .where(eq(tasks.id, id))
+      .returning();
+    return result[0];
   }
-
+  
   // Task progress operations
   async getTaskProgress(id: number): Promise<TaskProgress | undefined> {
-    return this.taskProgress.get(id);
+    const result = await db.select().from(taskProgress)
+      .where(eq(taskProgress.id, id));
+    return result[0];
   }
   
   async getTaskProgressByAttendee(attendeeId: number): Promise<TaskProgress[]> {
-    return Array.from(this.taskProgress.values()).filter(
-      (progress) => progress.attendeeId === attendeeId
-    );
+    return await db.select().from(taskProgress)
+      .where(eq(taskProgress.attendeeId, attendeeId));
   }
   
   async getTaskProgressByTask(taskId: number): Promise<TaskProgress[]> {
-    return Array.from(this.taskProgress.values()).filter(
-      (progress) => progress.taskId === taskId
-    );
+    return await db.select().from(taskProgress)
+      .where(eq(taskProgress.taskId, taskId));
   }
   
   async createTaskProgress(progress: InsertTaskProgress): Promise<TaskProgress> {
-    const id = this.taskProgressCounter++;
-    // Ensure required fields with defaults
-    const newProgress: TaskProgress = { 
-      ...progress, 
-      id,
-      status: progress.status || "not_started",
-      startTime: progress.startTime || null,
-      endTime: progress.endTime || null,
-      mentorReview: progress.mentorReview || null,
-      mentorRating: progress.mentorRating || null
-    };
-    this.taskProgress.set(id, newProgress);
-    return newProgress;
+    const result = await db.insert(taskProgress).values(progress).returning();
+    return result[0];
   }
   
   async updateTaskProgress(id: number, progress: Partial<InsertTaskProgress>): Promise<TaskProgress | undefined> {
-    const existingProgress = this.taskProgress.get(id);
-    if (!existingProgress) return undefined;
-    
-    const updatedProgress = { ...existingProgress, ...progress };
-    this.taskProgress.set(id, updatedProgress);
-    return updatedProgress;
+    const result = await db.update(taskProgress)
+      .set(progress)
+      .where(eq(taskProgress.id, id))
+      .returning();
+    return result[0];
   }
-
+  
   // Dashboard statistics
   async getDashboardStats(eventId: number): Promise<any> {
     const eventAttendees = await this.getAttendeesByEvent(eventId);
@@ -478,35 +311,110 @@ export class MemStorage implements IStorage {
       completedTrend: '+8% from last week',
       rateTrend: '+3% from last week',
       progressStats: {
-        notStarted: `${Math.round(((totalApplications - participantsStarted) / totalApplications) * 100)}%`,
-        inProgress: `${Math.round(((participantsStarted - participantsCompleted) / totalApplications) * 100)}%`,
-        completed: `${Math.round((participantsCompleted / totalApplications) * 100)}%`
+        notStarted: eventAttendees.filter(a => a.status === 'registered').length,
+        inProgress: eventAttendees.filter(a => a.status === 'in_progress').length,
+        completed: participantsCompleted
       }
     };
   }
   
   async getTopPerformers(eventId: number, limit: number = 5): Promise<any[]> {
-    const eventAttendees = await this.getAttendeesByEvent(eventId);
+    // Get attendees with scores, sorted by score descending
+    const topAttendees = await db.select()
+      .from(attendees)
+      .where(and(
+        eq(attendees.eventId, eventId),
+        sql`${attendees.score} > 0`
+      ))
+      .orderBy(desc(attendees.score))
+      .limit(limit);
     
-    // Handle null scores properly
-    return eventAttendees
-      .filter(a => a.status === 'completed' && (a.score !== null && a.score > 0))
-      .sort((a, b) => {
-        // Handle null scores in sort
-        const scoreA = a.score || 0;
-        const scoreB = b.score || 0;
-        return scoreB - scoreA;
-      })
-      .slice(0, limit)
-      .map(a => ({
-        id: a.id,
-        name: a.name,
-        score: a.score || 0,
-        completionTime: a.completionTime || '3h 00m',
-        initials: a.name.split(' ').map(n => n[0]).join('').toUpperCase()
-      }));
+    return topAttendees.map(attendee => ({
+      id: attendee.id,
+      name: attendee.name,
+      score: attendee.score || 0,
+      completionTime: attendee.completionTime || 'N/A',
+      email: attendee.email,
+      company: attendee.company || 'N/A'
+    }));
+  }
+  
+  // Initialize database with default data
+  async initializeDefaultData(): Promise<void> {
+    // Check if any users exist
+    const existingUsers = await db.select({ count: count() }).from(users);
+    if (existingUsers[0].count > 0) {
+      console.log('Database already has data, skipping initialization');
+      return;
+    }
+    
+    // Create admin user
+    const hashedPassword = await bcrypt.hash('password', 10);
+    await this.createUser({
+      username: 'admin',
+      password: hashedPassword,
+      email: 'admin@example.com',
+      name: 'Admin User',
+      role: 'admin'
+    });
+    console.log('Default admin user created: admin@example.com / password');
+    
+    // Create a sample event
+    const event = await this.createEvent({
+      name: 'AspiraSys Workshop System',
+      description: 'Technical skill development workshop',
+      startDate: new Date('2023-09-15'),
+      endDate: new Date('2023-09-20'),
+      location: 'Bangalore, India',
+      status: 'active'
+    });
+    
+    // Add sample attendees
+    await this.createAttendee({
+      eventId: event.id,
+      name: 'Priya Sharma',
+      email: 'priya.sharma@example.com',
+      company: 'Tech Innovations',
+      position: 'Junior Developer',
+      phone: '9876543210',
+      status: 'registered',
+      username: 'priya.sharma@example.com',
+      password: 'abc123',
+      mentorId: null,
+      score: 0,
+      completionTime: null
+    });
+    
+    await this.createAttendee({
+      eventId: event.id,
+      name: 'Rahul Patel',
+      email: 'rahul.patel@example.com',
+      company: 'Digital Solutions',
+      position: 'UI/UX Designer',
+      phone: '8765432109',
+      status: 'in_progress',
+      username: 'rahul.patel@example.com',
+      password: 'abc123',
+      mentorId: null,
+      score: 45,
+      completionTime: null
+    });
+    
+    await this.createAttendee({
+      eventId: event.id,
+      name: 'Ananya Kumar',
+      email: 'ananya.k@example.com',
+      company: 'WebTech',
+      position: 'Software Engineer',
+      phone: '7654321098',
+      status: 'completed',
+      username: 'ananya.k@example.com',
+      password: 'abc123',
+      mentorId: null,
+      score: 92,
+      completionTime: '2h 15m'
+    });
   }
 }
 
-// Create and export a singleton instance
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();
