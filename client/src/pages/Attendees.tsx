@@ -20,11 +20,11 @@ export default function Attendees() {
   
   const { toast } = useToast();
   
-  const { data: events, isLoading: eventsLoading } = useQuery({
+  const { data: events, isLoading: eventsLoading } = useQuery<any[]>({
     queryKey: ['/api/events'],
   });
   
-  const { data: attendees, isLoading: attendeesLoading, error } = useQuery({
+  const { data: attendees, isLoading: attendeesLoading, error } = useQuery<any[]>({
     queryKey: [`/api/events/${eventId}/attendees`],
   });
   
@@ -88,7 +88,7 @@ export default function Attendees() {
       <Sidebar />
       
       <main id="page-content" className="col-md-9 ms-sm-auto col-lg-10 px-md-4">
-        <Header eventName={events && events[0] ? events[0].name : "AspiraSys Workshop System"} />
+        <Header eventName={events && events.length > 0 ? events[0].name : "AspiraSys Workshop System"} />
         
         <div className="container-fluid py-4">
           <div className="d-flex justify-content-between align-items-center mb-4">
