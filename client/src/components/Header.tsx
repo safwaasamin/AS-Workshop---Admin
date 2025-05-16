@@ -46,24 +46,30 @@ export function Header({ eventName = "Dashboard", toggleSidebar }: HeaderProps) 
       </div>
       
       {/* Search Box */}
-      <div className="search-box ml-auto mr-4">
-        <Search className="w-4 h-4" />
-        <input type="text" placeholder="Search..." />
+      <div className="search-box ml-auto mr-4 relative">
+        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+          <Search className="w-4 h-4 text-gray-500" />
+        </div>
+        <input 
+          type="text" 
+          placeholder="Search..." 
+          className="h-9 pl-10 pr-4 rounded-md border border-gray-300 bg-white text-sm w-full"
+        />
       </div>
       
       {/* Action Icons */}
-      <div className="flex items-center gap-3">
-        <button className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-gray-100">
-          <Sun className="w-5 h-5 text-gray-500" />
+      <div className="flex items-center gap-2">
+        <button className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100">
+          <Sun className="w-4 h-4 text-gray-600" />
         </button>
         
-        <button className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-gray-100 relative">
-          <Bell className="w-5 h-5 text-gray-500" />
-          <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full"></span>
+        <button className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 relative">
+          <Bell className="w-4 h-4 text-gray-600" />
+          <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full"></span>
         </button>
         
-        <button className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-gray-100">
-          <Settings className="w-5 h-5 text-gray-500" />
+        <button className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100">
+          <Settings className="w-4 h-4 text-gray-600" />
         </button>
         
         {/* User Profile */}

@@ -144,11 +144,11 @@ export default function Attendees() {
               <div className="flex-1">
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Search className="h-5 w-5 text-gray-400" />
+                    <Search className="h-4 w-4 text-gray-500" />
                   </div>
                   <input
                     type="text"
-                    className="form-control pl-10"
+                    className="form-control h-10 pl-10 w-full rounded-md border border-gray-300 bg-white text-sm"
                     placeholder="Search by name, email, or company..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
@@ -158,10 +158,10 @@ export default function Attendees() {
               <div className="w-full md:w-48">
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Filter className="h-5 w-5 text-gray-400" />
+                    <Filter className="h-4 w-4 text-gray-500" />
                   </div>
                   <select
-                    className="form-select pl-10"
+                    className="form-select h-10 pl-10 w-full rounded-md border border-gray-300 bg-white text-sm appearance-none"
                     value={statusFilter}
                     onChange={(e) => setStatusFilter(e.target.value)}
                   >

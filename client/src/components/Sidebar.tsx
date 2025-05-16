@@ -36,26 +36,26 @@ export function Sidebar({ className = "" }: SidebarProps) {
       <ul className="nav flex-column">
         <li className="nav-item">
           <Link href="/">
-            <a className={`nav-link ${isActive('/') ? 'active' : ''}`}>
+            <div className={`nav-link ${isActive('/') ? 'active' : ''}`}>
               <i className="bi bi-speedometer2"></i>
               Dashboard
-            </a>
+            </div>
           </Link>
         </li>
         <li className="nav-item">
           <Link href="/attendees">
-            <a className={`nav-link ${isActive('/attendees') ? 'active' : ''}`}>
+            <div className={`nav-link ${isActive('/attendees') ? 'active' : ''}`}>
               <i className="bi bi-people"></i>
               Attendees
-            </a>
+            </div>
           </Link>
         </li>
         <li className="nav-item">
           <Link href="/mentors">
-            <a className={`nav-link ${isActive('/mentors') ? 'active' : ''}`}>
+            <div className={`nav-link ${isActive('/mentors') ? 'active' : ''}`}>
               <i className="bi bi-person-check"></i>
               Mentors
-            </a>
+            </div>
           </Link>
         </li>
         
@@ -63,26 +63,26 @@ export function Sidebar({ className = "" }: SidebarProps) {
         
         <li className="nav-item">
           <Link href="/feedback">
-            <a className={`nav-link ${isActive('/feedback') ? 'active' : ''}`}>
+            <div className={`nav-link ${isActive('/feedback') ? 'active' : ''}`}>
               <i className="bi bi-chat-square-text"></i>
               Feedback
-            </a>
+            </div>
           </Link>
         </li>
         <li className="nav-item">
           <Link href="/tasks">
-            <a className={`nav-link ${isActive('/tasks') ? 'active' : ''}`}>
+            <div className={`nav-link ${isActive('/tasks') ? 'active' : ''}`}>
               <i className="bi bi-list-check"></i>
               Tasks
-            </a>
+            </div>
           </Link>
         </li>
         <li className="nav-item">
           <Link href="/reports">
-            <a className={`nav-link ${isActive('/reports') ? 'active' : ''}`}>
+            <div className={`nav-link ${isActive('/reports') ? 'active' : ''}`}>
               <i className="bi bi-file-earmark-bar-graph"></i>
               Reports
-            </a>
+            </div>
           </Link>
         </li>
       </ul>

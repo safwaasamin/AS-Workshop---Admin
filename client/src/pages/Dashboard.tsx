@@ -139,34 +139,49 @@ export default function Dashboard() {
             {/* Donut Chart */}
             <div className="chart-container">
               <h3 className="chart-title">Completion Rate</h3>
-              <div className="flex items-center justify-center h-64">
-                <div className="relative">
-                  <div className="w-36 h-36 rounded-full border-16 border-primary-500 flex items-center justify-center">
-                    <div className="text-2xl font-bold">
-                      {stats?.completionRate || 0}%
+              <div className="flex flex-col items-center justify-center h-64">
+                <div className="relative w-48 h-48">
+                  <svg className="w-full h-full" viewBox="0 0 200 200">
+                    {/* Background circle */}
+                    <circle 
+                      cx="100" 
+                      cy="100" 
+                      r="80" 
+                      fill="none" 
+                      stroke="#e5e7eb" 
+                      strokeWidth="16" 
+                    />
+                    {/* Progress circle - using AspiraSys blue color */}
+                    <circle 
+                      cx="100" 
+                      cy="100" 
+                      r="80" 
+                      fill="none" 
+                      stroke="#5A9BD5" 
+                      strokeWidth="16" 
+                      strokeDasharray={`${stats?.completionRate * 5.02} 502`} 
+                      strokeDashoffset="125.5"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                  {/* Center text */}
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="text-center">
+                      <div className="text-3xl font-bold text-gray-800">
+                        {stats?.completionRate || 0}%
+                      </div>
+                      <div className="text-sm text-gray-500 mt-1">Completion</div>
                     </div>
                   </div>
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <svg className="w-48 h-48">
-                      <circle 
-                        cx="96" 
-                        cy="96" 
-                        r="70" 
-                        fill="none" 
-                        stroke="#e5e7eb" 
-                        strokeWidth="16" 
-                      />
-                      <circle 
-                        cx="96" 
-                        cy="96" 
-                        r="70" 
-                        fill="none" 
-                        stroke="#546fff" 
-                        strokeWidth="16" 
-                        strokeDasharray={`${stats?.completionRate * 4.4} 440`} 
-                        strokeDashoffset="110"
-                      />
-                    </svg>
+                </div>
+                <div className="flex justify-center gap-6 mt-4">
+                  <div className="flex items-center">
+                    <div className="w-3 h-3 rounded-full bg-blue-500 mr-2"></div>
+                    <span className="text-sm text-gray-600">Completed</span>
+                  </div>
+                  <div className="flex items-center">
+                    <div className="w-3 h-3 rounded-full bg-gray-200 mr-2"></div>
+                    <span className="text-sm text-gray-600">Remaining</span>
                   </div>
                 </div>
               </div>
