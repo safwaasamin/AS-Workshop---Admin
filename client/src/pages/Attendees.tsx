@@ -105,7 +105,7 @@ export default function Attendees() {
         <Header eventName="Attendee Management" />
         
         <div className="mb-6">
-          <div className="flex justify-between items-center mb-6">
+          <div className="flex justify-between items-center mb-6 pt-2">
             <h2 className="text-2xl font-bold text-gray-800">Attendee List</h2>
             <div className="flex gap-3">
               <button 
@@ -143,7 +143,7 @@ export default function Attendees() {
             <div className="flex flex-col md:flex-row gap-4 mb-4">
               <div className="flex-1">
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <div className="absolute top-0 left-0 h-full w-10 flex items-center justify-center pointer-events-none">
                     <Search className="h-4 w-4 text-gray-500" />
                   </div>
                   <input
@@ -157,7 +157,7 @@ export default function Attendees() {
               </div>
               <div className="w-full md:w-48">
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <div className="absolute top-0 left-0 h-full w-10 flex items-center justify-center pointer-events-none">
                     <Filter className="h-4 w-4 text-gray-500" />
                   </div>
                   <select
