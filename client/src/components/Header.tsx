@@ -1,32 +1,24 @@
-import { useAuth } from "@/lib/auth";
-import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Menu, MenuIcon } from "lucide-react";
-import logoSvg from "@/assets/logo.svg";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { useAuth } from "@/hooks/use-auth";
+import { Bell, Menu, Search, Settings, Sun } from "lucide-react";
+import { useState } from "react";
+import { Logo } from "./Logo";
 
 interface HeaderProps {
   eventName?: string;
   toggleSidebar?: () => void;
 }
 
-export function Header({ eventName = "AspiraSys Workshop System", toggleSidebar }: HeaderProps) {
-  const { user, isLoading, logoutMutation } = useAuth();
+export function Header({ eventName = "Dashboard", toggleSidebar }: HeaderProps) {
+  const { user, logoutMutation } = useAuth();
+  const [theme, setTheme] = useState<'light' | 'dark'>('light');
   
   const handleLogout = () => {
     logoutMutation.mutate();
   };
   
   // Get user initials for avatar
-  const getInitials = (name: string) => {
+  const getInitials = (name?: string) => {
+    if (!name) return "AU";
     return name
       .split(' ')
       .map(part => part[0])
@@ -36,53 +28,82 @@ export function Header({ eventName = "AspiraSys Workshop System", toggleSidebar 
   };
   
   return (
-    <header className="border-b bg-white dark:bg-gray-950 h-16 flex items-center px-4 md:px-6">
-      <div className="flex items-center flex-1">
-        <Button 
-          variant="ghost" 
-          size="icon" 
+    <header className="edumin-header">
+      {/* Mobile Menu Toggle */}
+      <div className="flex md:hidden mr-4">
+        <button
           onClick={toggleSidebar}
-          className="mr-2 md:hidden"
+          className="p-2 rounded-md hover:bg-gray-100"
         >
-          <MenuIcon className="h-5 w-5" />
-          <span className="sr-only">Toggle menu</span>
-        </Button>
-        <div className="flex items-center">
-          <img src={logoSvg} alt="AspiraSys Workshop System Logo" className="h-10 mr-3" />
-          <h1 className="text-xl font-semibold">
-            <span className="text-blue-600">{eventName}</span>
-          </h1>
-        </div>
+          <Menu className="h-5 w-5" />
+          <span className="sr-only">Toggle sidebar</span>
+        </button>
       </div>
-      <div className="flex items-center gap-4">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="relative h-9 w-9 rounded-full">
-              <Avatar className="h-9 w-9">
-                <AvatarFallback className="bg-blue-500 text-white">
-                  {isLoading ? "..." : user?.name ? getInitials(user.name) : "AU"}
-                </AvatarFallback>
-              </Avatar>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-56" align="end" forceMount>
-            <DropdownMenuLabel>
-              <div className="flex flex-col">
-                <p className="text-sm font-medium leading-none">{isLoading ? "Loading..." : user?.name || "Admin User"}</p>
-                <p className="text-xs leading-none text-muted-foreground mt-1">{user?.email}</p>
-              </div>
-            </DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuGroup>
-              <DropdownMenuItem>Profile</DropdownMenuItem>
-              <DropdownMenuItem>Settings</DropdownMenuItem>
-            </DropdownMenuGroup>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleLogout}>
-              Logout
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+      
+      {/* Page Title / Current View */}
+      <div className="hidden md:block">
+        <h1 className="text-xl font-semibold text-gray-900">{eventName}</h1>
+      </div>
+      
+      {/* Search Box */}
+      <div className="search-box ml-auto mr-4">
+        <Search className="w-4 h-4" />
+        <input type="text" placeholder="Search..." />
+      </div>
+      
+      {/* Action Icons */}
+      <div className="flex items-center gap-3">
+        <button className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-gray-100">
+          <Sun className="w-5 h-5 text-gray-500" />
+        </button>
+        
+        <button className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-gray-100 relative">
+          <Bell className="w-5 h-5 text-gray-500" />
+          <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full"></span>
+        </button>
+        
+        <button className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-gray-100">
+          <Settings className="w-5 h-5 text-gray-500" />
+        </button>
+        
+        {/* User Profile */}
+        <div className="relative group">
+          <button 
+            className="flex items-center rounded-full hover:bg-gray-100 p-1"
+            onClick={(e) => {
+              e.preventDefault();
+              const dropdown = document.getElementById('user-dropdown');
+              if (dropdown) {
+                dropdown.classList.toggle('hidden');
+              }
+            }}
+          >
+            <div className="avatar-initial rounded-full bg-primary-100 text-primary-700">
+              {getInitials(user?.name)}
+            </div>
+          </button>
+          
+          {/* Dropdown Menu */}
+          <div 
+            id="user-dropdown"
+            className="hidden absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg py-1 z-10"
+          >
+            <div className="px-4 py-2">
+              <p className="text-sm font-medium text-gray-900">{user?.name || "Admin User"}</p>
+              <p className="text-xs text-gray-500">{user?.email}</p>
+            </div>
+            <hr className="my-1" />
+            <button className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100">Profile</button>
+            <button className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100">Settings</button>
+            <hr className="my-1" />
+            <button 
+              onClick={handleLogout}
+              className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
+            >
+              Sign out
+            </button>
+          </div>
+        </div>
       </div>
     </header>
   );

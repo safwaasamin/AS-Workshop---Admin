@@ -1,5 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
+import { Logo } from "./Logo";
 
 interface SidebarProps {
   className?: string;
@@ -7,77 +8,93 @@ interface SidebarProps {
 
 export function Sidebar({ className = "" }: SidebarProps) {
   const [location] = useLocation();
-  const { logoutMutation } = useAuth();
+  const { logoutMutation, user } = useAuth();
   
   const isActive = (path: string) => {
     return location === path;
   };
   
   return (
-    <nav className={`sidebar bg-dark text-white col-md-3 col-lg-2 d-md-block ${className}`}>
-      <div className="position-sticky pt-3">
-        <div className="p-3 mb-4 border-bottom border-secondary">
-          <h5 className="text-uppercase fw-bold text-center">AspiraSys Workshop System</h5>
-          <p className="text-center text-white-50 small mb-0">Event Coordinator</p>
+    <nav className={`edumin-sidebar ${className}`}>
+      <div className="logo">
+        <Logo />
+      </div>
+      
+      {/* User profile */}
+      <div className="px-5 py-4 flex items-center">
+        <div className="avatar-initial rounded-full bg-primary-100 text-primary-700 mr-3">
+          {user?.name ? user.name.substring(0, 2).toUpperCase() : "AS"}
         </div>
-        
-        <ul className="nav flex-column px-3">
-          <li className="nav-item">
-            <Link href="/">
-              <div className={`nav-link text-white ${isActive('/') ? 'active' : ''} cursor-pointer`}>
-                <i className="bi bi-speedometer2 me-2"></i>
-                Dashboard
-              </div>
-            </Link>
-          </li>
-          <li className="nav-item">
-            <Link href="/attendees">
-              <div className={`nav-link text-white ${isActive('/attendees') ? 'active' : ''} cursor-pointer`}>
-                <i className="bi bi-people me-2"></i>
-                Attendee Management
-              </div>
-            </Link>
-          </li>
-          <li className="nav-item">
-            <Link href="/mentors">
-              <div className={`nav-link text-white ${isActive('/mentors') ? 'active' : ''} cursor-pointer`}>
-                <i className="bi bi-person-check me-2"></i>
-                Mentor Assignment
-              </div>
-            </Link>
-          </li>
-          <li className="nav-item">
-            <Link href="/feedback">
-              <div className={`nav-link text-white ${isActive('/feedback') ? 'active' : ''} cursor-pointer`}>
-                <i className="bi bi-chat-square-text me-2"></i>
-                Feedback Setup
-              </div>
-            </Link>
-          </li>
-          <li className="nav-item">
-            <Link href="/tasks">
-              <div className={`nav-link text-white ${isActive('/tasks') ? 'active' : ''} cursor-pointer`}>
-                <i className="bi bi-list-check me-2"></i>
-                Task Monitoring
-              </div>
-            </Link>
-          </li>
-          <li className="nav-item">
-            <Link href="/reports">
-              <div className={`nav-link text-white ${isActive('/reports') ? 'active' : ''} cursor-pointer`}>
-                <i className="bi bi-file-earmark-bar-graph me-2"></i>
-                Reports
-              </div>
-            </Link>
-          </li>
-        </ul>
-        
-        <div className="px-3 mt-5 pt-5">
-          <button onClick={() => logoutMutation.mutate()} className="btn btn-outline-light w-100">
-            <i className="bi bi-box-arrow-right me-2"></i>
-            Logout
-          </button>
+        <div>
+          <div className="text-sm font-medium text-gray-900">{user?.name || 'Admin User'}</div>
+          <div className="text-xs text-gray-500">Event Coordinator</div>
         </div>
+      </div>
+      
+      <div className="nav-heading">Main Menu</div>
+      
+      <ul className="nav flex-column">
+        <li className="nav-item">
+          <Link href="/">
+            <a className={`nav-link ${isActive('/') ? 'active' : ''}`}>
+              <i className="bi bi-speedometer2"></i>
+              Dashboard
+            </a>
+          </Link>
+        </li>
+        <li className="nav-item">
+          <Link href="/attendees">
+            <a className={`nav-link ${isActive('/attendees') ? 'active' : ''}`}>
+              <i className="bi bi-people"></i>
+              Attendees
+            </a>
+          </Link>
+        </li>
+        <li className="nav-item">
+          <Link href="/mentors">
+            <a className={`nav-link ${isActive('/mentors') ? 'active' : ''}`}>
+              <i className="bi bi-person-check"></i>
+              Mentors
+            </a>
+          </Link>
+        </li>
+        
+        <div className="nav-heading">Workshop</div>
+        
+        <li className="nav-item">
+          <Link href="/feedback">
+            <a className={`nav-link ${isActive('/feedback') ? 'active' : ''}`}>
+              <i className="bi bi-chat-square-text"></i>
+              Feedback
+            </a>
+          </Link>
+        </li>
+        <li className="nav-item">
+          <Link href="/tasks">
+            <a className={`nav-link ${isActive('/tasks') ? 'active' : ''}`}>
+              <i className="bi bi-list-check"></i>
+              Tasks
+            </a>
+          </Link>
+        </li>
+        <li className="nav-item">
+          <Link href="/reports">
+            <a className={`nav-link ${isActive('/reports') ? 'active' : ''}`}>
+              <i className="bi bi-file-earmark-bar-graph"></i>
+              Reports
+            </a>
+          </Link>
+        </li>
+      </ul>
+      
+      <div className="px-4 mt-10">
+        <button 
+          onClick={() => logoutMutation.mutate()} 
+          className="edumin-btn edumin-btn-outline w-full"
+        >
+          <i className="bi bi-box-arrow-right"></i>
+          Logout
+        </button>
       </div>
     </nav>
   );
