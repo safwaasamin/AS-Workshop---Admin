@@ -3,16 +3,21 @@
 @tailwind utilities;
 
 :root {
-  --primary: #546fff;
-  --primary-light: #e1e6ff;
-  --primary-dark: #3b57e6;
-  --success: #00c292;
-  --warning: #fec107;
-  --danger: #ff5252;
-  --info: #03a9f4;
-  --gray: #747474;
+  --primary: #2b5ea2;
+  --primary-light: #e7f0f9;
+  --primary-dark: #1c4580;
+  --success: #3e934d;
+  --warning: #e89e3c;
+  --danger: #d9534f;
+  --info: #5198cb;
+  --gray: #555555;
   --gray-light: #f5f5f5;
-  --bg-light: #f7f9fc;
+  --bg-light: #f9fafb;
+  
+  /* AspiraSys triangle colors */
+  --blue: #5A9BD5;
+  --orange: #DF5A49;
+  --green: #70AD46;
 }
 
 /* Typography */
@@ -74,14 +79,14 @@ body {
 }
 
 .edumin-sidebar .nav-link:hover {
-  color: var(--primary);
-  background-color: var(--primary-light);
+  color: var(--blue);
+  background-color: rgba(90, 155, 213, 0.08);
 }
 
 .edumin-sidebar .nav-link.active {
-  color: var(--primary);
-  background-color: var(--primary-light);
-  border-left: 3px solid var(--primary);
+  color: var(--blue);
+  background-color: rgba(90, 155, 213, 0.12);
+  border-left: 3px solid var(--blue);
 }
 
 .avatar-initial {
@@ -146,16 +151,37 @@ body {
   border-radius: 6px;
   transition: all 0.3s;
   cursor: pointer;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
 }
 
 .edumin-btn-primary {
-  background-color: var(--primary);
+  background-color: var(--blue);
   color: white;
   border: none;
 }
 
 .edumin-btn-primary:hover {
-  background-color: var(--primary-dark);
+  background-color: #4a8bc5;
+}
+
+.edumin-btn-secondary {
+  background-color: var(--orange);
+  color: white;
+  border: none;
+}
+
+.edumin-btn-secondary:hover {
+  background-color: #d04a3d;
+}
+
+.edumin-btn-success {
+  background-color: var(--green);
+  color: white;
+  border: none;
+}
+
+.edumin-btn-success:hover {
+  background-color: #609d36;
 }
 
 .edumin-btn-outline {
@@ -165,8 +191,8 @@ body {
 }
 
 .edumin-btn-outline:hover {
-  border-color: var(--primary);
-  color: var(--primary);
+  border-color: var(--blue);
+  color: var(--blue);
 }
 
 /* Dashboard Cards */
@@ -210,22 +236,22 @@ body {
 
 /* Card Variants */
 .primary-card .stat-icon {
-  background-color: var(--primary-light);
-  color: var(--primary);
+  background-color: rgba(90, 155, 213, 0.15);
+  color: var(--blue);
 }
 
 .warning-card .stat-icon {
-  background-color: #fff8e1;
-  color: var(--warning);
+  background-color: rgba(223, 90, 73, 0.15);
+  color: var(--orange);
 }
 
 .success-card .stat-icon {
-  background-color: #e0f7f0;
-  color: var(--success);
+  background-color: rgba(112, 173, 70, 0.15);
+  color: var(--green);
 }
 
 .danger-card .stat-icon {
-  background-color: #ffe8e8;
+  background-color: rgba(217, 83, 79, 0.15);
   color: var(--danger);
 }
 
@@ -275,29 +301,29 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 4px 8px;
+  padding: 4px 10px;
   font-size: 12px;
   font-weight: 500;
   border-radius: 4px;
 }
 
 .status-badge.primary {
-  background-color: var(--primary-light);
-  color: var(--primary);
+  background-color: rgba(90, 155, 213, 0.15);
+  color: var(--blue);
 }
 
 .status-badge.warning {
-  background-color: #fff8e1;
-  color: #ffa000;
+  background-color: rgba(223, 90, 73, 0.15);
+  color: var(--orange);
 }
 
 .status-badge.success {
-  background-color: #e0f7f0;
-  color: var(--success);
+  background-color: rgba(112, 173, 70, 0.15);
+  color: var(--green);
 }
 
 .status-badge.danger {
-  background-color: #ffe8e8;
+  background-color: rgba(217, 83, 79, 0.15);
   color: var(--danger);
 }
 
