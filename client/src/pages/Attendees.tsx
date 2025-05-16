@@ -2,13 +2,13 @@ import { useState } from "react";
 import { Sidebar } from "@/components/Sidebar";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
-import { AttendeeTable } from "@/components/AttendeeTable";
 import { ImportAttendees } from "@/components/ImportAttendees";
 import { AttendeeForm } from "@/components/AttendeeForm";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Loading } from "@/components/ui/loading";
 import { useToast } from "@/hooks/use-toast";
+import { Filter, Plus, RefreshCw, Upload, Search } from "lucide-react";
 
 export default function Attendees() {
   // For demo purposes, use event ID 1
@@ -17,6 +17,8 @@ export default function Attendees() {
   const [editingAttendee, setEditingAttendee] = useState<any>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteAttendeeId, setDeleteAttendeeId] = useState<number | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
   
   const { toast } = useToast();
   
@@ -69,14 +71,26 @@ export default function Attendees() {
   
   const isLoading = eventsLoading || attendeesLoading;
   
+  // Filter attendees based on search term and status
+  const filteredAttendees = attendees ? attendees.filter(attendee => {
+    const matchesSearch = searchTerm === '' || 
+      attendee.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      attendee.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (attendee.company && attendee.company.toLowerCase().includes(searchTerm.toLowerCase()));
+    
+    const matchesStatus = statusFilter === 'all' || attendee.status === statusFilter;
+    
+    return matchesSearch && matchesStatus;
+  }) : [];
+  
   if (isLoading) {
     return <Loading fullScreen />;
   }
   
   if (error) {
     return (
-      <div className="d-flex justify-content-center align-items-center min-vh-100">
-        <div className="alert alert-danger" role="alert">
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="bg-red-100 text-red-700 p-4 rounded-lg">
           Error loading data. Please try again.
         </div>
       </div>
@@ -84,113 +98,158 @@ export default function Attendees() {
   }
   
   return (
-    <div className="d-flex">
+    <div className="flex h-screen bg-gray-50">
       <Sidebar />
       
-      <main id="page-content" className="col-md-9 ms-sm-auto col-lg-10 px-md-4">
-        <Header eventName={events && events.length > 0 ? events[0].name : "AspiraSys Workshop System"} />
+      <div className="edumin-main">
+        <Header eventName="Attendee Management" />
         
-        <div className="container-fluid py-4">
-          <div className="d-flex justify-content-between align-items-center mb-4">
-            <h2 className="fw-bold">Attendee Management</h2>
-            <div className="d-flex gap-2">
+        <div className="mb-6">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-bold text-gray-800">Attendee List</h2>
+            <div className="flex gap-3">
               <button 
-                className="btn btn-primary" 
+                className="edumin-btn edumin-btn-outline"
+                onClick={() => {
+                  queryClient.invalidateQueries({ queryKey: [`/api/events/${eventId}/attendees`] });
+                }}
+              >
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Refresh
+              </button>
+              <button 
+                className="edumin-btn edumin-btn-outline"
+                data-bs-toggle="modal" 
+                data-bs-target="#importAttendeesModal"
+              >
+                <Upload className="w-4 h-4 mr-2" />
+                Import
+              </button>
+              <button 
+                className="edumin-btn edumin-btn-primary"
                 onClick={() => {
                   setEditingAttendee(null);
                   setShowCreateModal(true);
                 }}
               >
-                <i className="bi bi-plus-circle me-2"></i>Add Attendee
-              </button>
-              <button 
-                className="btn btn-outline-primary" 
-                data-bs-toggle="modal" 
-                data-bs-target="#importAttendeesModal"
-              >
-                <i className="bi bi-upload me-2"></i>Import Attendees
+                <Plus className="w-4 h-4 mr-2" />
+                Add Attendee
               </button>
             </div>
           </div>
 
-          {/* Attendee List */}
-          <div className="card border-0 shadow-sm mb-4">
-            <div className="card-body">
-              <div className="table-responsive">
-                <table className="table table-hover align-middle">
-                  <thead className="table-light">
-                    <tr>
-                      <th scope="col">Name</th>
-                      <th scope="col">Email</th>
-                      <th scope="col">Company</th>
-                      <th scope="col">Status</th>
-                      <th scope="col">Score</th>
-                      <th scope="col">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {attendees && attendees.length > 0 ? (
-                      attendees.map((attendee: any) => (
-                        <tr key={attendee.id}>
-                          <td>
-                            <div className="d-flex align-items-center">
-                              <div className="avatar-initial rounded-circle me-2 bg-primary text-white">
-                                {attendee.name.split(' ').map((n: string) => n[0]).slice(0, 2).join('').toUpperCase()}
-                              </div>
-                              <div>{attendee.name}</div>
+          {/* Search and Filter */}
+          <div className="chart-container mb-6">
+            <div className="flex flex-col md:flex-row gap-4 mb-4">
+              <div className="flex-1">
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Search className="h-5 w-5 text-gray-400" />
+                  </div>
+                  <input
+                    type="text"
+                    className="form-control pl-10"
+                    placeholder="Search by name, email, or company..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                </div>
+              </div>
+              <div className="w-full md:w-48">
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Filter className="h-5 w-5 text-gray-400" />
+                  </div>
+                  <select
+                    className="form-select pl-10"
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                  >
+                    <option value="all">All Statuses</option>
+                    <option value="registered">Registered</option>
+                    <option value="in_progress">In Progress</option>
+                    <option value="completed">Completed</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            {/* Attendee List */}
+            <div className="overflow-x-auto">
+              <table className="edumin-table w-full">
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Company</th>
+                    <th>Status</th>
+                    <th>Score</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredAttendees.length > 0 ? (
+                    filteredAttendees.map((attendee: any) => (
+                      <tr key={attendee.id}>
+                        <td>
+                          <div className="flex items-center">
+                            <div className="avatar-initial rounded-full bg-primary-100 text-primary-700 mr-3">
+                              {attendee.name.split(' ').map((n: string) => n[0]).slice(0, 2).join('').toUpperCase()}
                             </div>
-                          </td>
-                          <td>{attendee.email}</td>
-                          <td>{attendee.company || '-'}</td>
-                          <td>
-                            <span className={`badge ${
-                              attendee.status === 'registered' ? 'bg-secondary' : 
-                              attendee.status === 'in_progress' ? 'bg-primary' : 
-                              'bg-success'
-                            }`}>
-                              {attendee.status === 'registered' ? 'Registered' : 
-                               attendee.status === 'in_progress' ? 'In Progress' : 
-                               'Completed'}
-                            </span>
-                          </td>
-                          <td>{attendee.score || '-'}</td>
-                          <td>
-                            <div className="btn-group">
-                              <button
-                                className="btn btn-sm btn-outline-primary"
-                                onClick={() => handleEdit(attendee)}
-                              >
-                                <i className="bi bi-pencil"></i>
-                              </button>
-                              <button
-                                className="btn btn-sm btn-outline-danger"
-                                onClick={() => handleDelete(attendee.id)}
-                              >
-                                <i className="bi bi-trash"></i>
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td colSpan={6} className="text-center py-4">
-                          <div className="text-muted">No attendees found</div>
-                          <button 
-                            className="btn btn-sm btn-outline-primary mt-2"
-                            onClick={() => {
-                              setEditingAttendee(null);
-                              setShowCreateModal(true);
-                            }}
-                          >
-                            Add Attendee
-                          </button>
+                            <div className="font-medium">{attendee.name}</div>
+                          </div>
+                        </td>
+                        <td>{attendee.email}</td>
+                        <td>{attendee.company || '-'}</td>
+                        <td>
+                          <span className={`status-badge ${
+                            attendee.status === 'registered' ? 'warning' : 
+                            attendee.status === 'in_progress' ? 'primary' : 
+                            'success'
+                          }`}>
+                            {attendee.status === 'registered' ? 'Registered' : 
+                             attendee.status === 'in_progress' ? 'In Progress' : 
+                             'Completed'}
+                          </span>
+                        </td>
+                        <td>{attendee.score || '-'}</td>
+                        <td>
+                          <div className="flex space-x-2">
+                            <button
+                              className="p-1 hover:bg-gray-100 rounded"
+                              onClick={() => handleEdit(attendee)}
+                            >
+                              <i className="bi bi-pencil text-blue-600"></i>
+                            </button>
+                            <button
+                              className="p-1 hover:bg-gray-100 rounded"
+                              onClick={() => handleDelete(attendee.id)}
+                            >
+                              <i className="bi bi-trash text-red-600"></i>
+                            </button>
+                          </div>
                         </td>
                       </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={6} className="text-center py-8">
+                        <div className="text-gray-500 mb-2">No attendees found</div>
+                        <button 
+                          className="edumin-btn edumin-btn-outline"
+                          onClick={() => {
+                            setEditingAttendee(null);
+                            setShowCreateModal(true);
+                          }}
+                        >
+                          <Plus className="w-4 h-4 mr-2" />
+                          Add Attendee
+                        </button>
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
             </div>
           </div>
           
@@ -246,20 +305,20 @@ export default function Attendees() {
                 <div className="modal-footer">
                   <button 
                     type="button" 
-                    className="btn btn-outline-secondary" 
+                    className="edumin-btn edumin-btn-outline"
                     onClick={() => setShowDeleteModal(false)}
                   >
                     Cancel
                   </button>
                   <button 
                     type="button" 
-                    className="btn btn-danger"
+                    className="edumin-btn edumin-btn-primary bg-red-600 hover:bg-red-700"
                     onClick={confirmDelete}
                     disabled={deleteMutation.isPending}
                   >
                     {deleteMutation.isPending ? (
                       <>
-                        <span className="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
+                        <span className="spinner-border spinner-border-sm mr-2" aria-hidden="true"></span>
                         Deleting...
                       </>
                     ) : 'Delete'}
@@ -271,7 +330,7 @@ export default function Attendees() {
           
           <Footer />
         </div>
-      </main>
+      </div>
     </div>
   );
 }
