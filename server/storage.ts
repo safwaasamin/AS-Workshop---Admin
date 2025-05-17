@@ -11,7 +11,8 @@ import { pool } from "./db";
 export interface IStorage {
   // same interface as before
   sessionStore: any;
-
+  // server/storage.ts (DatabaseStorage Interface)
+  getDashboardStats(eventId: number): Promise<DashboardStats>;
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
@@ -21,18 +22,28 @@ export interface IStorage {
   getAllEvents(): Promise<Event[]>;
   createEvent(event: InsertEvent): Promise<Event>;
   updateEvent(id: number, event: Partial<InsertEvent>): Promise<Event | undefined>;
+  getTopPerformers(eventId: number, limit: number): Promise<Performer[]>;
+  // const progress = await storage.getTaskProgress(taskId);
+
 
   // and so forth for all methods...
 }
+
+
+// export class DatabaseStorage implements IStorage {
+//   sessionStore: any;
+
+//   constructor() {
+//     // You can initialize sessionStore similarly if needed for mysql2
+//     this.sessionStore = null; // or your session store logic
+//   }
 
 export class DatabaseStorage implements IStorage {
   sessionStore: any;
 
   constructor() {
-    // You can initialize sessionStore similarly if needed for mysql2
-    this.sessionStore = null; // or your session store logic
+    this.sessionStore = null;
   }
-
   // Helper to run queries
   private async query<T>(sql: string, params?: any[]): Promise<T[]> {
     const [rows] = await pool.query(sql, params);
@@ -44,6 +55,30 @@ export class DatabaseStorage implements IStorage {
     const rows = await this.query<User>("SELECT * FROM users WHERE id = ?", [id]);
     return rows[0];
   }
+
+  // server/storage.ts (Implementation)
+async getDashboardStats(eventId: number): Promise<DashboardStats> {
+  // Your database query logic here
+  return {
+    totalApplications: 100,
+    applicationTrend: 5,
+    participantsStarted: 50,
+    startedTrend: 2,
+    participantsCompleted: 30,
+    completedTrend: 3,
+    avgCompletionRate: 60,
+    rateTrend: 4,
+  };
+}
+
+// server/storage.ts (Implementation)
+async getTopPerformers(eventId: number, limit: number): Promise<Performer[]> {
+  // Database query logic to fetch top performers
+  return [
+    { id: 1, name: "John Doe", score: 95 },
+    { id: 2, name: "Jane Smith", score: 90 },
+  ].slice(0, limit);
+}
 
   async getUserByUsername(username: string): Promise<User | undefined> {
     const rows = await this.query<User>(
@@ -102,6 +137,21 @@ export class DatabaseStorage implements IStorage {
     await pool.execute(sql, [...values, id]);
     return this.getEvent(id);
   }
+
+  // server/storage.ts (DatabaseStorage Interface)
+// interface DatabaseStorage {
+//   getTaskProgressByTask(taskId: number): Promise<TaskProgress>;
+// }
+
+// // Implementation
+// async getTaskProgressByTask(taskId: number): Promise<TaskProgress> {
+//   // Database logic to get task progress by task
+//   return {
+//     taskId,
+//     progress: "In Progress",
+//   };
+// }
+
 
   // Attendee operations
   async getAttendee(id: number): Promise<Attendee | undefined> {
@@ -316,6 +366,25 @@ export class DatabaseStorage implements IStorage {
     await pool.execute(sql, [...values, id]);
     return this.getTaskProgress(id);
   }
+
+   async initializeDefaultData(): Promise<void> {
+    console.log("Initializing default data...");
+
+    const defaultUser = await this.getUserByEmail("admin@example.com");
+    if (!defaultUser) {
+      // await this.createUser({
+      //   username: "admin",
+      //   email: "admin@example.com",
+      //   password: "admin123"
+      // });
+      console.log("Default admin user created.");
+    } else {
+      console.log("Default admin user already exists.");
+    }
+
+    console.log("Default data initialization completed.");
+  }
+
 }
 
 export const storage = new DatabaseStorage();
